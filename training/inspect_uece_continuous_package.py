@@ -13,16 +13,20 @@ MAX_HEADER = 65_536
 
 
 def read_npy_header(stream):
-    prefix = stream.read(12)
-    if len(prefix) < 10 or prefix[:6] != b"\x93NUMPY":
+    prefix = stream.read(8)
+    if len(prefix) != 8 or prefix[:6] != b"\\x93NUMPY":
         return {"header_error": "not_npy_or_truncated"}
     major, minor = prefix[6], prefix[7]
     if major == 1:
-        header_len = struct.unpack("<H", prefix[8:10])[0]
-    elif major in (2, 3):
-        if len(prefix) < 12:
+        length_bytes = stream.read(2)
+        if len(length_bytes) != 2:
             return {"header_error": "truncated_npy_header"}
-        header_len = struct.unpack("<I", prefix[8:12])[0]
+        header_len = struct.unpack("<H", length_bytes)[0]
+    elif major in (2, 3):
+        length_bytes = stream.read(4)
+        if len(length_bytes) != 4:
+            return {"header_error": "truncated_npy_header"}
+        header_len = struct.unpack("<I", length_bytes)[0]
     else:
         return {"header_error": "unsupported_npy_version", "version": f"{major}.{minor}"}
     if header_len > MAX_HEADER:
@@ -42,7 +46,6 @@ def read_npy_header(stream):
         "fortran_order": header.get("fortran_order"),
         "object_or_pickle_dtype": "O" in str(descr),
     }
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
