@@ -134,3 +134,12 @@ python training/validate_continuous_jsonl.py training/continuous_dataset.jsonl -
 ```
 
 Use `--expected-dim 360` apenas se os vetores vierem do extrator do aplicativo. Para o corpus UECE, a documentação descreve 106 landmarks com coordenadas x/y/z, portanto 318 valores por quadro. O validador não confirma que o vídeo e a tradução estão corretamente alinhados; isso exige auditoria de metadados e revisão linguística.
+
+
+## Auditoria do corpus UECE no celular (Google Colab)
+
+Para evitar baixar quase 774 MB diretamente no Android, há um notebook que faz o download diretamente no ambiente Colab, confere o MD5 oficial e inspeciona o ZIP sem extrair todos os arquivos:
+
+[ Abrir notebook de auditoria no GitHub ](https://github.com/danyellallk/SINAL-LIBRAS/blob/main/training/SINAL_LIBRAS_Auditoria_UECE.ipynb)
+
+No GitHub, abra o notebook e escolha **Open in Colab** (ou baixe o arquivo e envie para o Colab). Execute as células em ordem. O notebook não treina a IA; ele apenas produz o inventário técnico que precisamos para criar o conversor sem adivinhar o formato dos dados. O pacote tem aproximadamente 773,6 MB e pode levar algum tempo para baixar.
