@@ -28,7 +28,7 @@
 <body>
 <main class="wrap">
   <header class="brand"><div class="mark">S</div><div><h1>SINAL LIBRAS</h1><p>Comunicação que aproxima pessoas</p></div></header>
-  <section class="intro"><h2>Vamos nos comunicar?</h2><p>Um espaço de apoio à comunicação entre português e Língua Brasileira de Sinais.</p></section>
+  <section class="intro"><h2>Vamos nos comunicar?</h2><p>Um espaço de apoio à comunicação entre português e Língua Brasileira de Sinais.</p><p class="notice" id="connectionStatus" role="status" aria-live="polite">Verificando conexão...</p></section>
   <nav class="bottom-nav" aria-label="Navegação principal"><button class="active" type="button" data-tab-target="conversar"><span>💬</span>Conversar</button><button type="button" data-tab-target="favoritos"><span>☆</span>Favoritos</button><button type="button" data-tab-target="explorar"><span>🔎</span>Explorar</button><button type="button" data-tab-target="mais"><span>☰</span>Mais</button></nav>
   <div class="tab-panel" id="tab-mais">
   <details class="group"><summary><span>Instalar no celular<span class="groupHint">Adicionar o SINAL à tela inicial</span></span></summary><section class="panel" id="installPanel">
@@ -43,7 +43,8 @@
     <div class="label">Escolha o sentido da comunicação</div>
     <div class="tabs"><button class="tab active" id="ptl" type="button">Português → Libras</button><button class="tab" id="ltp" type="button">Libras → Português</button></div>
     <label class="label" for="source" id="sourceLabel">Digite uma mensagem em português</label>
-    <textarea id="source" placeholder="Ex.: Olá, tudo bem?"></textarea>
+    <textarea id="source" maxlength="500" placeholder="Ex.: Olá, tudo bem?"></textarea>
+    <div class="row" style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><span class="notice" id="characterCount">0 / 500 caracteres</span><button class="secondary" id="clearMessage" type="button" style="padding:7px 10px;font-size:12px">Limpar texto</button></div>
     <div class="actions"><button class="primary" id="process" type="button">Preparar mensagem</button><button class="secondary" id="speak" type="button">🔊 Ouvir texto</button></div>
     <div class="actions"><button class="secondary" id="copyMessage" type="button">📋 Copiar mensagem</button><button class="secondary" id="shareMessage" type="button">↗ Compartilhar</button></div>
     <div class="actions"><button class="secondary" id="voiceInput" type="button">🎙️ Falar mensagem</button></div>
@@ -132,7 +133,7 @@
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
   </section></details>
   </div>
-  <footer>SINAL LIBRAS • Versão 1.5 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 1.6 • Apoio de acessibilidade</footer>
 </main>
 <script>
   document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventListener("click",()=>{
@@ -143,6 +144,14 @@
   }));
   let direction = "ptl";
   const source = document.getElementById("source");
+  const characterCount = document.getElementById("characterCount");
+  function updateCharacterCount(){characterCount.textContent=source.value.length+" / 500 caracteres";}
+  source.addEventListener("input",updateCharacterCount);
+  document.getElementById("clearMessage").addEventListener("click",()=>{source.value="";updateCharacterCount();output.textContent="Texto limpo. Digite uma nova mensagem quando quiser.";source.focus();});
+  updateCharacterCount();
+  const connectionStatus=document.getElementById("connectionStatus");
+  function updateConnectionStatus(){const online=navigator.onLine;connectionStatus.textContent=online?"● Conectado à internet — recursos online disponíveis.":"● Sem internet — textos e favoritos salvos continuam no aparelho; VLibras e carregamento do modelo de mãos precisam de conexão.";connectionStatus.style.color=online?"#9bd8b0":"#f5c451";}
+  window.addEventListener("online",updateConnectionStatus);window.addEventListener("offline",updateConnectionStatus);updateConnectionStatus();
   const output = document.getElementById("output");
   const ptl = document.getElementById("ptl");
   const ltp = document.getElementById("ltp");
