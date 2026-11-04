@@ -56,6 +56,13 @@
       <button class="phrase" data-text="Pode repetir, por favor?">Pode repetir? <small>Comunicação</small></button>
     </div>
   </section>
+  <section class="panel" id="favoritesPanel">
+    <div class="label">Minhas mensagens favoritas</div>
+    <p class="notice">Guarde mensagens que você usa com frequência. Elas ficam salvas somente neste aparelho e podem ser usadas mesmo sem internet.</p>
+    <div class="actions"><button class="primary" id="saveFavorite" type="button">☆ Salvar mensagem digitada</button></div>
+    <div class="libraryGrid" id="favoriteList" aria-live="polite"></div>
+    <div class="empty" id="noFavorites">Você ainda não salvou mensagens. Digite uma mensagem acima e toque em “Salvar mensagem digitada”.</div>
+  </section>
   <section class="panel" id="library">
     <div class="label">Biblioteca inicial de sinais</div>
     <p class="notice">Pesquise uma palavra ou escolha uma categoria. Esta lista organiza temas para montar o acervo; ainda não contém traduções ou vídeos validados.</p>
@@ -79,7 +86,7 @@
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Versão 0.4 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 0.5 • Apoio de acessibilidade</footer>
   <section class="panel">
     <div class="label">Apoio de tradução com avatar 3D</div>
     <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
@@ -134,6 +141,28 @@
   document.getElementById("searchSigns").addEventListener("input",renderSigns);
   document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{activeFilter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));renderSigns();}));
   renderSigns();
+  const FAVORITES_KEY="sinal-libras-favorites-v1";
+  const favoriteList=document.getElementById("favoriteList");
+  const noFavorites=document.getElementById("noFavorites");
+  function readFavorites(){try{const data=JSON.parse(localStorage.getItem(FAVORITES_KEY)||"[]");return Array.isArray(data)?data.filter(x=>typeof x==="string"):[];}catch(e){return [];}}
+  function renderFavorites(){
+    const items=readFavorites();favoriteList.replaceChildren();noFavorites.hidden=items.length>0;
+    items.forEach((message,index)=>{
+      const card=document.createElement("article");card.className="signCard";
+      const text=document.createElement("strong");text.textContent=message;
+      const row=document.createElement("div");row.className="actions";
+      const use=document.createElement("button");use.type="button";use.className="secondary";use.textContent="Usar";use.addEventListener("click",()=>{source.value=message;source.focus();window.scrollTo({top:0,behavior:"smooth"});});
+      const remove=document.createElement("button");remove.type="button";remove.className="filter";remove.textContent="Excluir";remove.addEventListener("click",()=>{const updated=readFavorites();updated.splice(index,1);try{localStorage.setItem(FAVORITES_KEY,JSON.stringify(updated));renderFavorites();}catch(e){noFavorites.textContent="Não foi possível atualizar as mensagens salvas neste aparelho.";}});
+      row.append(use,remove);card.append(text,row);favoriteList.append(card);
+    });
+  }
+  document.getElementById("saveFavorite").addEventListener("click",()=>{
+    const message=source.value.trim();if(!message){output.textContent="Digite uma mensagem antes de salvá-la.";return;}
+    const items=readFavorites();if(items.includes(message)){output.textContent="Essa mensagem já está nos favoritos.";return;}
+    if(items.length>=30){output.textContent="Limite de 30 mensagens favoritas atingido. Exclua uma para adicionar outra.";return;}
+    try{items.unshift(message);localStorage.setItem(FAVORITES_KEY,JSON.stringify(items));renderFavorites();output.textContent="Mensagem salva neste aparelho.";}catch(e){output.textContent="Não foi possível salvar. Verifique o espaço disponível e as configurações do navegador.";}
+  });
+  renderFavorites();
   let selectedVideoUrl=null;
   document.getElementById("videoFile").addEventListener("change",e=>{
     const file=e.target.files&&e.target.files[0];const player=document.getElementById("signVideo");if(!file)return;
