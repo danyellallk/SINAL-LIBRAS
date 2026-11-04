@@ -345,6 +345,7 @@ sequenceButton.addEventListener("click",async()=>{
     }
     const detected=lastSequenceDataset.reduce((sum,frame)=>sum+frame.hands.length,0);
     sequenceExportButton.disabled=detected===0;
+    updateSampleButton();
     sequenceStatus.textContent="Análise concluída: "+sampleCount+" momentos examinados e "+detected+" detecções de mãos registradas. Ainda não há interpretação do significado dos sinais.";
   }catch(error){lastSequenceDataset=[];sequenceExportButton.disabled=true;sequenceStatus.textContent="Falha na análise temporal: "+(error?.message||"erro desconhecido")+". Confira a conexão e tente novamente.";
   }finally{sequenceButton.disabled=false;}
