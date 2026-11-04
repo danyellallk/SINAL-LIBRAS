@@ -25,8 +25,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Check Python syntax
-        run: python -m compileall -q training
+      - name: Check Python syntax and notebook structure
+        run: |
+          python -m compileall -q training
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("training/SINAL_LIBRAS_Auditoria_UECE.ipynb")
+          notebook = json.loads(path.read_text(encoding="utf-8"))
+          assert notebook.get("nbformat") == 4
+          assert notebook.get("cells"), "Notebook sem células"
+          assert all(cell.get("cell_type") in {"markdown", "code"} for cell in notebook["cells"])
+          print("Notebook JSON válido:", len(notebook["cells"]), "células")
+          PY
       - name: Smoke-test JSONL validator
         run: |
           python - <<'PY'
@@ -43,3 +54,22 @@ jobs:
           )
           PY
           python training/validate_continuous_jsonl.py /tmp/sinal-smoke.jsonl --expected-dim 318
+          # Um mesmo participante não pode aparecer em partições diferentes.
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          frame = [0.0] * 318
+          rows = [
+              {"sample_id":"a1","signer_id":"same-person","split":"train","portuguese_text":"bom dia","frames":[frame,frame]},
+              {"sample_id":"b1","signer_id":"same-person","split":"dev","portuguese_text":"boa tarde","frames":[frame,frame]},
+          ]
+          Path("/tmp/sinal-leak.jsonl").write_text(
+              "\\n".join(json.dumps(row) for row in rows), encoding="utf-8"
+          )
+          PY
+          if python training/validate_continuous_jsonl.py /tmp/sinal-leak.jsonl --expected-dim 318; then
+            echo "ERRO: vazamento de participante não foi detectado"
+            exit 1
+          else
+            echo "OK: vazamento de participante foi detectado"
+          fi
