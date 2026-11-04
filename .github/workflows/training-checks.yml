@@ -58,6 +58,20 @@ jobs:
           )
           PY
           python training/validate_continuous_jsonl.py /tmp/sinal-smoke.jsonl --expected-dim 318
+          # Dimensão desconhecida deve ser rejeitada.
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          frame = [0.0] * 126
+          row = {"sample_id":"bad-dim","signer_id":"p1","split":"train","portuguese_text":"teste","frames":[frame,frame]}
+          Path("/tmp/sinal-bad-dim.jsonl").write_text(json.dumps(row), encoding="utf-8")
+          PY
+          if python training/validate_continuous_jsonl.py /tmp/sinal-bad-dim.jsonl; then
+            echo "ERRO: dimensão 126 foi aceita pelo pipeline contínuo"
+            exit 1
+          else
+            echo "OK: dimensão incompatível foi rejeitada"
+          fi
           # Um mesmo participante não pode aparecer em partições diferentes.
           python - <<'PY'
           import json
