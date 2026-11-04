@@ -146,7 +146,7 @@
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
   </section></details>
   </div>
-  <footer>SINAL LIBRAS • Versão 1.9 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 2.0 • Apoio de acessibilidade</footer>
 </main>
 <script>
   document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventListener("click",()=>{
@@ -348,6 +348,8 @@ const handStatus=document.getElementById("handStatus");
 const handConnections=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 let handTask=null;
 let sequenceTask=null;
+let poseTask=null;
+let faceTask=null;
 let lastSequenceDataset=[];
 let lastHandDataset=[];
 const sequenceButton=document.getElementById("analyzeSequence");
@@ -366,6 +368,25 @@ sequenceButton.addEventListener("click",async()=>{
         baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"},
         runningMode:"VIDEO",numHands:2,minHandDetectionConfidence:0.45,minHandPresenceConfidence:0.45,minTrackingConfidence:0.45
       });
+    }
+    if(!poseTask){
+      try{
+        const fileset=await visionModule.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
+        poseTask=await visionModule.PoseLandmarker.createFromOptions(fileset,{
+          baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"},
+          runningMode:"VIDEO",numPoses:1,minPoseDetectionConfidence:0.4,minPosePresenceConfidence:0.4,minTrackingConfidence:0.4
+        });
+      }catch(poseError){poseTask=null;sequenceStatus.textContent="Modelo corporal indisponível; continuando com mãos e rosto...";}
+    }
+    if(!faceTask){
+      try{
+        const fileset=await visionModule.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
+        faceTask=await visionModule.FaceLandmarker.createFromOptions(fileset,{
+          baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"},
+          runningMode:"VIDEO",numFaces:1,minFaceDetectionConfidence:0.4,minFacePresenceConfidence:0.4,minTrackingConfidence:0.4,
+          outputFaceBlendshapes:false,outputFacialTransformationMatrixes:false
+        });
+      }catch(faceError){faceTask=null;sequenceStatus.textContent="Modelo facial indisponível; continuando com mãos e corpo...";}
     }
     const duration=video.duration;
     const sampleCount=12;
@@ -387,13 +408,27 @@ sequenceButton.addEventListener("click",async()=>{
       const timestamp=Math.max(lastTimestamp+1,Math.round(times[i]*1000));lastTimestamp=timestamp;
       const result=sequenceTask.detectForVideo(canvas,timestamp);
       const hands=result.landmarks||[];
-      lastSequenceDataset.push({frame:i+1,timeSeconds:Number(times[i].toFixed(3)),hands:hands.map((landmarks,handIndex)=>({handIndex:handIndex+1,handedness:result.handedness?.[handIndex]?.[0]?.categoryName||"não informado",points:landmarks.map((point,pointIndex)=>({point:pointIndex,x:Number(point.x.toFixed(6)),y:Number(point.y.toFixed(6)),z:Number(point.z.toFixed(6))}))}))});
-      sequenceStatus.textContent="Analisando quadro "+(i+1)+" de "+sampleCount+"...";
+      const poseResult=poseTask?poseTask.detectForVideo(canvas,timestamp):null;
+      const faceResult=faceTask?faceTask.detectForVideo(canvas,timestamp):null;
+      const packPoints=(landmarks,indices=null)=>(landmarks||[]).flatMap((point,pointIndex)=>{
+        if(indices&&!indices.includes(pointIndex))return [];
+        return [{point:pointIndex,x:Number(point.x.toFixed(6)),y:Number(point.y.toFixed(6)),z:Number(point.z.toFixed(6)),...(point.visibility!==undefined?{visibility:Number(point.visibility.toFixed(5))}:{})}];
+      });
+      const pose=poseResult?.landmarks?.[0]||[];
+      const face=faceResult?.faceLandmarks?.[0]||[];
+      const faceKeypoints=[1,13,14,33,61,105,133,159,234,263,291,334,362,386,454];
+      lastSequenceDataset.push({
+        frame:i+1,timeSeconds:Number(times[i].toFixed(3)),
+        hands:hands.map((landmarks,handIndex)=>({handIndex:handIndex+1,handedness:result.handedness?.[handIndex]?.[0]?.categoryName||"não informado",points:packPoints(landmarks)})),
+        body:packPoints(pose),
+        face:packPoints(face,faceKeypoints)
+      });
+      sequenceStatus.textContent="Analisando mãos, corpo e rosto: quadro "+(i+1)+" de "+sampleCount+"...";
     }
     const detected=lastSequenceDataset.reduce((sum,frame)=>sum+frame.hands.length,0);
     sequenceExportButton.disabled=detected===0;
     updateSampleButton();
-    sequenceStatus.textContent="Análise concluída: "+sampleCount+" momentos examinados e "+detected+" detecções de mãos registradas. Ainda não há interpretação do significado dos sinais.";
+    sequenceStatus.textContent="Análise concluída: "+sampleCount+" momentos examinados. Mãos: "+detected+" detecções; corpo e pontos faciais: "+(poseTask?"incluídos":"indisponíveis")+"/"+(faceTask?"incluídos":"indisponíveis")+". Ainda não há interpretação do significado dos sinais.";
   }catch(error){lastSequenceDataset=[];sequenceExportButton.disabled=true;sequenceStatus.textContent="Falha na análise temporal: "+(error?.message||"erro desconhecido")+". Confira a conexão e tente novamente.";
   }finally{sequenceButton.disabled=false;}
 });
