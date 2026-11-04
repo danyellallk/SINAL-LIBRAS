@@ -167,3 +167,17 @@ python training/inspect_npy_pickle_static.py Libras-EQT-UECE-T.zip --member "Lib
 ```
 
 Substitua o caminho interno pelo nome exato mostrado pelo inventário do ZIP. O script apenas analisa a estrutura do pickle com `pickletools`; não usa `pickle.load`, `numpy.load(..., allow_pickle=True)` nem executa objetos. A saída pode revelar classes/referências globais e a estrutura de serialização, mas não é um conversor e não recupera valores de anotação. Nunca execute pickle de origem externa.
+
+
+## Inspecionar o ZIP contínuo de 35,6 GB sem baixá-lo inteiro
+
+Foi adicionado `inspect_uece_remote_zip.py`. Ele consulta os metadados do Zenodo e tenta ler o diretório central do ZIP e apenas os primeiros bytes dos NPY usando requisições HTTP Range. Assim, o ambiente Colab pode inspecionar a estrutura sem armazenar o pacote inteiro. O servidor precisa aceitar HTTP Range; se não aceitar, o script para sem iniciar um download completo.
+
+No Colab:
+
+```python
+!pip -q install remotezip requests
+!python training/inspect_uece_remote_zip.py --max-samples 80
+```
+
+O script não desserializa NPY de objeto, não executa pickle e limita a leitura de cada membro. O resultado identifica nomes, tamanhos, extensões, candidatos a anotações e cabeçalhos NPY. Isso ainda não é a tradução: depois de conhecer o esquema real, precisamos decodificar os metadados com segurança e validar a correspondência entre IDs, glossas e frases em português.
