@@ -12,6 +12,7 @@ Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunica�
 - Orientação e botão de instalação como aplicativo no Android, quando o navegador oferece suporte.
 - Mensagens favoritas salvas localmente no aparelho, com opção de reutilizar e excluir.
 - Copiar mensagens e compartilhar pelo menu nativo do Android, quando disponível; alternativa de cópia para navegadores sem compartilhamento direto.
+- Digitação por voz em português, quando o navegador oferece a API de reconhecimento de fala; exige permissão do microfone e pode depender de conexão.
 - Widget oficial VLibras para apoio à tradução de conteúdo textual português → Libras (requer internet).
 
 ## Limitações importantes
