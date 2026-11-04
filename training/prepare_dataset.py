@@ -55,8 +55,10 @@ def canonical_frame(frame):
 def split_for_signer(signer_id):
     value = str(signer_id or "sem-identificador")
     h = 0
-    for char in value:
-        h = (h * 31 + ord(char)) & 0xFFFFFFFF
+    encoded = value.encode("utf-16-le")
+    for index in range(0, len(encoded), 2):
+        code_unit = encoded[index] | (encoded[index + 1] << 8)
+        h = (h * 31 + code_unit) & 0xFFFFFFFF
     bucket = h % 20
     return "teste" if bucket < 3 else ("validacao" if bucket < 6 else "treino")
 
