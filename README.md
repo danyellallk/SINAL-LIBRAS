@@ -57,3 +57,7 @@ O diretório `training/` contém um script Python sem dependências externas par
 
 ## Publicar gratuitamente
 O projeto pode ser publicado pelo GitHub Pages. Não requer serviço pago para esta primeira versão.
+
+## Experimento de treinamento
+O diretório `training/` também inclui um classificador GRU experimental em PyTorch para sinais isolados. Ele requer um conjunto com classes e grupos de treino/validação adequados; não realiza tradução de frases e não está integrado ao app ainda.
+Consulte `training/README.md` antes de executar. O app ainda não contém um modelo de tradução Libras–Português treinado.
