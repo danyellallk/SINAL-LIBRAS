@@ -22,10 +22,10 @@ Uma autorização deve esclarecer, no mínimo, uso para pesquisa/treinamento de 
 - DOI: 10.5281/zenodo.21398895
 - Publicado em 16/07/2026.
 - Arquivos anunciados: `Landmarks.zip` (773,6 MB), vídeos RGB (9,0 GB) e outro conjunto de vídeos (35,6 GB), total aproximado de 45,4 GB.
-- Licença declarada: Creative Commons CC BY-NC 4.0.
+- Licença indicada nas informações consultadas: Creative Commons CC BY-NC 4.0. A cópia integral do `LICENSE.txt` da versão v4 ainda precisa ser lida e conferida antes de autorizar qualquer uso de treinamento.
 - A licença exige atribuição e **não permite uso comercial**. Antes de qualquer uso, conferir o README, a estrutura, as anotações, as condições de consentimento e se a tarefa/labels servem ao nosso objetivo.
 
-Este dataset é uma opção para um experimento estritamente não comercial, respeitando a licença e citando os autores. Ele não deve ser usado em uma versão comercial ou monetizada sem uma autorização/licença diferente. A documentação do próprio dataset informa que o pacote RGB contém vídeos organizados por glossas, incluindo amostras isoladas e contínuas; o pacote processado contém partições de anotações `.npy` (train/dev/test), quadros e recursos; e o ZIP de landmarks contém coordenadas em CSV/JSON. Isso o torna uma fonte promissora para pesquisar tradução contínua, mas ainda precisamos auditar o conteúdo e confirmar como as frases e glossas estão alinhadas. O arquivo de landmarks tem centenas de MB; não é adequado para baixar e treinar diretamente no celular Android.
+Este dataset é uma opção para um experimento estritamente não comercial, respeitando a licença e citando os autores. Ele não deve ser usado em uma versão comercial ou monetizada sem uma autorização/licença diferente. A documentação científica descreve um pacote contínuo processado com partições de anotações `.npy` (train/dev/test), quadros e recursos. A auditoria realizada neste projeto confirmou que `Landmarks.zip` contém arrays `.npy` organizados em pastas por sinal/glossa e informante. Ainda não inspecionamos o conteúdo interno do pacote contínuo de 35,6 GB nem confirmamos como seus identificadores se relacionam com cada arquivo de landmarks. Isso o torna uma fonte promissora para pesquisar tradução contínua, mas ainda precisamos auditar o conteúdo e confirmar como as frases e glossas estão alinhadas. O arquivo de landmarks tem centenas de MB; não é adequado para baixar e treinar diretamente no celular Android.
 
 ## Outra fonte em avaliação — V-Librasil
 
@@ -76,3 +76,14 @@ Fontes:
 - Artigo e descrição técnica do corpus: https://doi.org/10.1109/ACCESS.2026.3715086
 - README do Zenodo: https://zenodo.org/records/21398895/preview/README.md?include_deleted=0
 - Licença da versão 4: https://zenodo.org/records/21398895/preview/LICENSE.txt?include_deleted=0
+
+
+## Inspeção do pacote contínuo (sem extração)
+
+Foi criado `inspect_uece_continuous_package.py` para inventariar o pacote `Libras-EQT-UECE-T.zip`. O script lista diretórios, extensões, candidatos a arquivos de anotação e lê somente os cabeçalhos dos primeiros arquivos NPY. Ele não extrai o ZIP, não carrega matrizes e não executa pickle.
+
+```bash
+python training/inspect_uece_continuous_package.py Libras-EQT-UECE-T.zip --samples 50
+```
+
+O pacote tem aproximadamente 35,6 GB. Não é necessário nem recomendável baixá-lo no celular. Quando a inspeção for executada em um ambiente com espaço suficiente, precisamos comparar os IDs e a estrutura das anotações com os caminhos de landmarks. Só depois dessa conferência será seguro criar o conversor para o formato CTC. Cabeçalhos NPY com dtype de objeto serão apenas identificados; nunca serão carregados com `allow_pickle=True`.
