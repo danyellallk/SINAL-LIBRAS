@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102b46">
+  <meta name="description" content="SINAL LIBRAS — protótipo gratuito de apoio à comunicação em português e Libras.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>SINAL LIBRAS</title>
+  <style>
+    :root{color-scheme:dark;--bg:#071522;--panel:#102b46;--panel2:#173b5b;--blue:#36a9e8;--gold:#f5c451;--text:#f4f8fc;--muted:#b9cbd9}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#0d2941,#06111d 70%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+    .wrap{max-width:760px;margin:auto;padding:22px 16px 42px}.brand{display:flex;align-items:center;gap:12px;margin:10px 0 24px}.mark{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,var(--blue),#17618f);display:grid;place-items:center;font-size:25px;font-weight:900;color:white;box-shadow:0 8px 28px #0005}.brand h1{font-size:23px;margin:0;letter-spacing:1.5px}.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+    .intro h2{font-size:clamp(25px,6vw,34px);line-height:1.12;margin:0 0 9px}.intro p{color:var(--muted);line-height:1.5;margin:0 0 22px}
+    .panel{background:#102b46eF;border:1px solid #ffffff1c;border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0002}.label{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 18px}.tab,button{border:0;border-radius:12px;padding:13px 12px;font:inherit;font-weight:700;cursor:pointer}.tab{background:#1b3b56;color:#d9e8f4}.tab.active{background:var(--gold);color:#172334}
+    textarea{width:100%;min-height:118px;resize:vertical;border:1px solid #ffffff30;border-radius:13px;padding:14px;background:#081b2b;color:white;font:inherit;outline:none}textarea:focus{border-color:var(--blue)}
+    .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}.primary{background:var(--blue);color:#041523;flex:1}.secondary{background:#254966;color:white}.output{background:#081b2b;border:1px dashed #5e88a5;border-radius:13px;padding:16px;min-height:88px;line-height:1.5;margin-top:10px}.notice{font-size:12px;color:var(--muted);line-height:1.5;margin:12px 2px 0}
+    .phrases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.phrase{background:#173b5b;color:white;text-align:left;border:1px solid #ffffff18}.phrase small{display:block;color:#c1d7e8;font-weight:400;margin-top:4px}
+    .cameraBox{background:#081b2b;border-radius:14px;min-height:160px;display:grid;place-items:center;text-align:center;padding:18px;color:var(--muted);margin-top:10px}video{width:100%;border-radius:12px;display:none;background:#000}
+    footer{text-align:center;color:#8da9be;font-size:12px;padding:22px 0}
+    @media(max-width:420px){.wrap{padding:17px 12px}.panel{padding:14px}.phrases{grid-template-columns:1fr 1fr}.tab{font-size:13px;padding:12px 7px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="brand"><div class="mark">S</div><div><h1>SINAL LIBRAS</h1><p>Comunicação que aproxima pessoas</p></div></header>
+  <section class="intro"><h2>Vamos nos comunicar?</h2><p>Um espaço de apoio à comunicação entre português e Língua Brasileira de Sinais.</p></section>
+  <section class="panel">
+    <div class="label">Escolha o sentido da comunicação</div>
+    <div class="tabs">
+      <button class="tab active" id="ptl" type="button">Português → Libras</button>
+      <button class="tab" id="ltp" type="button">Libras → Português</button>
+    </div>
+    <label class="label" for="source" id="sourceLabel">Digite uma mensagem em português</label>
+    <textarea id="source" placeholder="Ex.: Olá, tudo bem?"></textarea>
+    <div class="actions">
+      <button class="primary" id="process" type="button">Preparar mensagem</button>
+      <button class="secondary" id="speak" type="button">🔊 Ouvir texto</button>
+    </div>
+    <div class="label" style="margin-top:18px">Resultado / apoio visual</div>
+    <div class="output" id="output" aria-live="polite">Sua mensagem aparecerá aqui. Este protótipo ainda não realiza tradução automática de Libras.</div>
+    <p class="notice" id="directionNote">A tradução para Libras exige sinais, expressões faciais e estrutura gramatical própria. Nesta primeira versão, estamos preparando a interface e os recursos básicos.</p>
+  </section>
+  <section class="panel">
+    <div class="label">Frases úteis para começar</div>
+    <div class="phrases">
+      <button class="phrase" data-text="Olá, tudo bem?">Olá <small>Saudação</small></button>
+      <button class="phrase" data-text="Meu nome é...">Meu nome é... <small>Apresentação</small></button>
+      <button class="phrase" data-text="Por favor">Por favor <small>Cortesia</small></button>
+      <button class="phrase" data-text="Obrigado">Obrigado <small>Agradecimento</small></button>
+      <button class="phrase" data-text="Não entendi">Não entendi <small>Comunicação</small></button>
+      <button class="phrase" data-text="Pode repetir, por favor?">Pode repetir? <small>Comunicação</small></button>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="label">Entrada por câmera — etapa inicial</div>
+    <div class="cameraBox" id="cameraBox"><div><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="video" autoplay playsinline></video></div>
+    <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
+  </section>
+  <footer>SINAL LIBRAS • Protótipo gratuito em desenvolvimento</footer>
+</main>
+<script>
+  let direction = "ptl";
+  const source = document.getElementById("source");
+  const output = document.getElementById("output");
+  const ptl = document.getElementById("ptl");
+  const ltp = document.getElementById("ltp");
+  function setDirection(value){
+    direction=value; ptl.classList.toggle("active",value==="ptl"); ltp.classList.toggle("active",value==="ltp");
+    document.getElementById("sourceLabel").textContent=value==="ptl"?"Digite uma mensagem em português":"Conteúdo em Libras (reconhecimento ainda não disponível)";
+    source.placeholder=value==="ptl"?"Ex.: Olá, tudo bem?":"A tradução de sinais pela câmera será adicionada em uma próxima versão.";
+    document.getElementById("directionNote").textContent=value==="ptl"?"A tradução para Libras exige sinais, expressões faciais e estrutura gramatical própria. Nesta primeira versão, estamos preparando a interface e os recursos básicos.":"O reconhecimento de Libras pela câmera ainda está em desenvolvimento. Não vamos apresentar palpites como se fossem traduções corretas.";
+    output.textContent="Digite ou selecione uma frase para começar.";
+  }
+  ptl.addEventListener("click",()=>setDirection("ptl")); ltp.addEventListener("click",()=>setDirection("ltp"));
+  document.getElementById("process").addEventListener("click",()=>{
+    const value=source.value.trim(); if(!value){output.textContent="Digite uma mensagem primeiro.";return;}
+    output.textContent=direction==="ptl"?"Mensagem recebida: “"+value+"”. A representação em sinais será adicionada quando a biblioteca de Libras estiver validada.":"Texto recebido: “"+value+"”. Esta versão não consegue interpretar sinais digitados ou gestos da câmera.";
+  });
+  document.getElementById("speak").addEventListener("click",()=>{
+    const value=source.value.trim(); if(!value){output.textContent="Digite um texto para ouvir.";return;}
+    if(!("speechSynthesis" in window)){output.textContent="A leitura em voz alta não é compatível com este navegador.";return;}
+    speechSynthesis.cancel(); const utterance=new SpeechSynthesisUtterance(value); utterance.lang="pt-BR"; speechSynthesis.speak(utterance);
+  });
+  document.querySelectorAll("[data-text]").forEach(button=>button.addEventListener("click",()=>{source.value=button.dataset.text;source.focus();}));
+  document.getElementById("camera").addEventListener("click",async()=>{
+    const video=document.getElementById("video"), box=document.getElementById("cameraBox");
+    if(!navigator.mediaDevices?.getUserMedia){box.querySelector("p").textContent="Seu navegador não permite acesso à câmera neste contexto. Abra o site por HTTPS.";return;}
+    try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});video.srcObject=stream;video.style.display="block";box.querySelector("div").style.display="none";}
+    catch(e){box.querySelector("p").textContent="Não foi possível abrir a câmera. Verifique a permissão do navegador e tente novamente.";}
+  });
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
