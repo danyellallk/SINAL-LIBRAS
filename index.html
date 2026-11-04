@@ -87,13 +87,15 @@
     <p class="notice">Esta etapa extrai três imagens do vídeo no próprio celular para inspeção. Ainda não identifica sinais nem gera tradução automática; nenhum vídeo ou quadro é enviado.</p>
     <div class="frameGrid" id="videoFrames" aria-live="polite"></div>
     <p class="notice" id="analysisStatus" aria-live="polite"></p>
+    <div class="actions"><button class="primary" id="detectHands" type="button" disabled>🖐️ Detectar pontos das mãos</button></div>
+    <p class="notice" id="handStatus" aria-live="polite">Depois de preparar os quadros, você poderá testar a detecção de mãos. É necessário internet para carregar o modelo gratuito; a análise das imagens ocorre no aparelho.</p>
   </section>
   <section class="panel">
     <div class="label">Entrada por câmera — etapa inicial</div>
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Versão 0.7 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 0.9 • Apoio de acessibilidade</footer>
   <section class="panel">
     <div class="label">Apoio de tradução com avatar 3D</div>
     <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
@@ -246,7 +248,7 @@
         const card=document.createElement("div");const label=document.createElement("small");label.className="notice";label.textContent="Quadro "+(i+1)+" • "+times[i].toFixed(1)+" s";
         card.append(canvas,label);videoFrames.append(card);
       }
-      analysisStatus.textContent="3 quadros extraídos localmente. Isto é apenas uma preparação visual: o SINAL LIBRAS ainda não reconhece nem traduz os sinais.";
+      analysisStatus.textContent="3 quadros extraídos localmente. Agora você pode testar a detecção dos pontos das mãos.";document.getElementById("detectHands").disabled=false;
     }catch(error){analysisStatus.textContent=error.message||"Não foi possível preparar os quadros. Tente outro vídeo.";}
     finally{analyzeVideoButton.disabled=false;}
   });
@@ -270,6 +272,45 @@
   window.addEventListener("appinstalled",()=>{installStatus.textContent="SINAL LIBRAS instalado na tela inicial.";installButton.hidden=true;});
   if("serviceWorker" in navigator && location.protocol.startsWith("http")) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
+
+<script type="module">
+const detectButton=document.getElementById("detectHands");
+const handStatus=document.getElementById("handStatus");
+const handConnections=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+let handTask=null;
+detectButton.addEventListener("click",async()=>{
+  const canvases=[...document.querySelectorAll("#videoFrames canvas")];
+  if(!canvases.length){handStatus.textContent="Primeiro prepare os quadros do vídeo.";return;}
+  detectButton.disabled=true;handStatus.textContent="Carregando o modelo de detecção de mãos. Na primeira utilização pode demorar um pouco...";
+  try{
+    if(!handTask){
+      const visionModule=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs");
+      const vision=await visionModule.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
+      handTask=await visionModule.HandLandmarker.createFromOptions(vision,{
+        baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"},
+        runningMode:"IMAGE",numHands:2,minHandDetectionConfidence:0.45,minHandPresenceConfidence:0.45
+      });
+    }
+    let total=0;
+    for(const canvas of canvases){
+      const result=handTask.detect(canvas);
+      const hands=result.landmarks||[];total+=hands.length;
+      const ctx=canvas.getContext("2d");
+      ctx.lineWidth=Math.max(2,canvas.width/180);ctx.strokeStyle="#f5c451";ctx.fillStyle="#36a9e8";
+      for(const landmarks of hands){
+        for(const [a,b] of handConnections){
+          const p=landmarks[a],q=landmarks[b];ctx.beginPath();ctx.moveTo(p.x*canvas.width,p.y*canvas.height);ctx.lineTo(q.x*canvas.width,q.y*canvas.height);ctx.stroke();
+        }
+        for(const p of landmarks){ctx.beginPath();ctx.arc(p.x*canvas.width,p.y*canvas.height,Math.max(2,canvas.width/150),0,Math.PI*2);ctx.fill();}
+      }
+    }
+    handStatus.textContent=total>0?"Detecção concluída: o modelo encontrou "+total+" mão(s) somando os três quadros. Os pontos desenhados mostram articulações e contornos aproximados. Isso ainda não identifica o significado dos sinais.":"O modelo não encontrou mãos nos quadros escolhidos. Tente um vídeo mais claro, com as mãos visíveis e sem cortes.";
+  }catch(error){
+    handStatus.textContent="Não foi possível carregar ou executar o modelo. Verifique a internet e tente novamente. Detalhe: "+(error?.message||"erro desconhecido");
+  }finally{detectButton.disabled=false;}
+});
+</script>
+
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 </body>
 </html>
