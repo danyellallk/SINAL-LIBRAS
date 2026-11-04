@@ -73,7 +73,12 @@
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Versão 0.2 • Protótipo gratuito em desenvolvimento</footer>
+  <footer>SINAL LIBRAS • Versão 0.3 • Apoio de acessibilidade</footer>
+  <section class="panel">
+    <div class="label">Apoio de tradução com avatar 3D</div>
+    <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
+    <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
+  </section>
 </main>
 <script>
   let direction = "ptl";
@@ -140,3 +145,5 @@
 </script>
 </body>
 </html>
+<!-- Widget oficial VLibras: documentação em https://www.vlibras.gov.br/doc/widget/installation/webpageintegration.html -->
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
