@@ -137,8 +137,10 @@
   </section>
   <section class="panel">
     <div class="label">Entrada por câmera — etapa inicial</div>
-    <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
-    <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
+    <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Grave uma pessoa sinalizando em Libras ou selecione um vídeo do aparelho.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay muted playsinline style="display:none"></video></div>
+    <div class="actions"><button class="primary" id="startRecording" type="button" disabled>⏺️ Iniciar gravação</button><button class="secondary" id="stopRecording" type="button" disabled>■ Parar e usar vídeo</button></div>
+    <p class="notice" id="recordingStatus" aria-live="polite">A gravação fica no aparelho. Depois, use “Preparar quadros do vídeo” para analisar os movimentos. Isso ainda não é tradução automática.</p>
+    <p class="notice">Dê preferência a enquadrar rosto, tronco e as duas mãos, com boa iluminação. Grave somente com consentimento da pessoa. O arquivo permanece local neste aparelho.</p>
   </section>
   <section class="panel">
     <div class="label">Apoio de tradução com avatar 3D</div>
@@ -146,7 +148,7 @@
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
   </section></details>
   </div>
-  <footer>SINAL LIBRAS • Versão 2.0 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 2.3 • Apoio de acessibilidade</footer>
 </main>
 <script>
   document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventListener("click",()=>{
@@ -281,8 +283,8 @@
   const analyzeVideoButton=document.getElementById("analyzeVideo");
   const videoFrames=document.getElementById("videoFrames");
   const analysisStatus=document.getElementById("analysisStatus");
-  videoInput.addEventListener("change",e=>{
-    const file=e.target.files&&e.target.files[0];if(!file)return;
+  function loadVideoFile(file){
+    if(!file)return;
     videoFrames.replaceChildren();analysisStatus.textContent="";
     if(!file.type.startsWith("video/")){document.getElementById("videoStatus").textContent="Escolha um arquivo de vídeo válido.";analyzeVideoButton.disabled=true;return;}
     if(file.size>100*1024*1024){document.getElementById("videoStatus").textContent="O vídeo é maior que 100 MB. Escolha um arquivo menor para evitar travamentos no celular.";analyzeVideoButton.disabled=true;return;}
@@ -290,7 +292,8 @@
     selectedVideoUrl=URL.createObjectURL(file);signVideo.src=selectedVideoUrl;signVideo.style.display="block";
     analyzeVideoButton.disabled=false;
     document.getElementById("videoStatus").textContent="Vídeo local: "+file.name+" ("+(file.size/1024/1024).toFixed(1)+" MB). Permanece somente neste aparelho.";
-  });
+  }
+  videoInput.addEventListener("change",e=>loadVideoFile(e.target.files&&e.target.files[0]));
   analyzeVideoButton.addEventListener("click",async()=>{
     if(!selectedVideoUrl)return;
     analyzeVideoButton.disabled=true;videoFrames.replaceChildren();analysisStatus.textContent="Preparando imagens do vídeo...";
@@ -321,12 +324,45 @@
     }catch(error){analysisStatus.textContent=error.message||"Não foi possível preparar os quadros. Tente outro vídeo.";}
     finally{analyzeVideoButton.disabled=false;}
   });
+  let recordingStream=null, mediaRecorder=null, recordedChunks=[];
+  const cameraVideo=document.getElementById("cameraVideo");
+  const recordingStatus=document.getElementById("recordingStatus");
+  const startRecordingButton=document.getElementById("startRecording");
+  const stopRecordingButton=document.getElementById("stopRecording");
   document.getElementById("camera").addEventListener("click",async()=>{
-    const video=document.getElementById("cameraVideo"), intro=document.getElementById("cameraIntro");
+    const intro=document.getElementById("cameraIntro");
     if(!navigator.mediaDevices?.getUserMedia){intro.querySelector("p").textContent="Seu navegador não permite acesso à câmera neste contexto. Abra o site por HTTPS.";return;}
-    try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});video.srcObject=stream;video.style.display="block";intro.style.display="none";}
-    catch(e){intro.querySelector("p").textContent="Não foi possível abrir a câmera. Verifique a permissão do navegador e tente novamente.";}
+    try{
+      recordingStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});
+      cameraVideo.srcObject=recordingStream;cameraVideo.style.display="block";intro.style.display="none";
+      startRecordingButton.disabled=!window.MediaRecorder;
+      recordingStatus.textContent=window.MediaRecorder?"Câmera pronta. Toque em Iniciar gravação.":"Este navegador não oferece gravação de vídeo; selecione um arquivo abaixo.";
+    }catch(e){intro.querySelector("p").textContent="Não foi possível abrir a câmera. Verifique a permissão do navegador e tente novamente.";}
   });
+  startRecordingButton.addEventListener("click",()=>{
+    if(!recordingStream||!window.MediaRecorder)return;
+    try{
+      const mimeType=["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"].find(type=>MediaRecorder.isTypeSupported(type));
+      mediaRecorder=new MediaRecorder(recordingStream,mimeType?{mimeType}:undefined);
+      recordedChunks=[];
+      mediaRecorder.ondataavailable=event=>{if(event.data&&event.data.size)recordedChunks.push(event.data);};
+      mediaRecorder.onerror=()=>{recordingStatus.textContent="Falha na gravação. Tente novamente ou escolha um vídeo salvo." ;};
+      mediaRecorder.onstop=()=>{
+        const blob=new Blob(recordedChunks,{type:mediaRecorder.mimeType||"video/webm"});
+        const file=new File([blob],"gravacao-sinal-libras.webm",{type:blob.type,lastModified:Date.now()});
+        loadVideoFile(file);
+        recordingStatus.textContent="Gravação concluída e pronta para análise. Toque em “Preparar quadros do vídeo”.";
+        startRecordingButton.disabled=false;stopRecordingButton.disabled=true;
+      };
+      mediaRecorder.start(500);
+      startRecordingButton.disabled=true;stopRecordingButton.disabled=false;
+      recordingStatus.textContent="Gravando... mantenha rosto, tronco e mãos visíveis. Toque em Parar e usar vídeo ao terminar.";
+    }catch(error){recordingStatus.textContent="Não foi possível iniciar a gravação neste navegador. Selecione um vídeo salvo no aparelho.";}
+  });
+  stopRecordingButton.addEventListener("click",()=>{
+    if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();
+  });
+  window.addEventListener("pagehide",()=>{if(recordingStream)recordingStream.getTracks().forEach(track=>track.stop());});
   let installPrompt=null;
   const installButton=document.getElementById("installApp");
   const installStatus=document.getElementById("installStatus");
