@@ -49,6 +49,11 @@ def read_rows(path):
     return rows
 
 
+def minimum_ctc_frames(tokens):
+    # CTC precisa de um quadro extra entre tokens adjacentes repetidos.
+    return len(tokens) + sum(1 for a, b in zip(tokens, tokens[1:]) if a == b)
+
+
 def get_features(row, feature_dim):
     result = []
     for frame_index, frame in enumerate(row["frames"]):
@@ -179,11 +184,19 @@ def main():
     if unknown_dev:
         print(f"AVISO: {unknown_dev} tokens de validação não existem no vocabulário de treino.")
 
-    # Remove frases de treino sem qualquer token representável.
-    train_rows = [r for r in train_rows if any(t in vocab for t in tokenize(r["portuguese_text"]))]
-    dev_rows = [r for r in dev_rows if any(t in vocab for t in tokenize(r["portuguese_text"]))]
-    if not dev_rows:
-        raise SystemExit("Nenhuma frase de validação contém tokens vistos no treino.")
+    # Remove frases sem tokens representáveis ou curtas demais para o alinhamento CTC.
+    def usable(row):
+        target = [t for t in tokenize(row["portuguese_text"]) if t in vocab]
+        return bool(target) and len(row["frames"]) >= minimum_ctc_frames(target)
+
+    before = (len(train_rows), len(dev_rows), len(test_rows))
+    train_rows = [r for r in train_rows if usable(r)]
+    dev_rows = [r for r in dev_rows if usable(r)]
+    test_rows = [r for r in test_rows if usable(r)]
+    print("Amostras descartadas por alvo vazio/curto para CTC:",
+          {"train": before[0] - len(train_rows), "dev": before[1] - len(dev_rows), "test": before[2] - len(test_rows)})
+    if not train_rows or not dev_rows:
+        raise SystemExit("Após validação CTC, faltam amostras em train ou dev. Revise comprimento das sequências e anotações.")
 
     train_ds = ContinuousDataset(train_rows, vocab, feature_dim)
     dev_ds = ContinuousDataset(dev_rows, vocab, feature_dim)
