@@ -163,17 +163,33 @@ def main():
     if not train_rows or not dev_rows:
         raise SystemExit("São necessárias amostras nos grupos train e dev. Preserve a divisão oficial por participante.")
     signer_splits = {}
-    for row in rows:
+    sample_ids = set()
+    feature_dims = set()
+    for row_index, row in enumerate(rows, 1):
         signer = str(row["signer_id"])
         signer_splits.setdefault(signer, set()).add(row["split"])
+        sample_id = str(row.get("sample_id", "")).strip()
+        if not sample_id:
+            raise SystemExit(f"Amostra {row_index}: sample_id ausente.")
+        if sample_id in sample_ids:
+            raise SystemExit(f"sample_id duplicado: {sample_id}")
+        sample_ids.add(sample_id)
+        for frame_index, frame in enumerate(row["frames"]):
+            if not isinstance(frame, list):
+                raise SystemExit(f"Amostra {sample_id}, quadro {frame_index}: quadro não é uma lista.")
+            feature_dims.add(len(frame))
+            if len(frame) not in (318, 360):
+                raise SystemExit(f"Amostra {sample_id}, quadro {frame_index}: dimensão {len(frame)}; esperado 318 (UECE) ou 360 (app).")
+            if not all(isinstance(value, (int, float)) and math.isfinite(float(value)) for value in frame):
+                raise SystemExit(f"Amostra {sample_id}, quadro {frame_index}: valor não numérico ou não finito.")
+    if len(feature_dims) != 1:
+        raise SystemExit(f"Não misture esquemas de landmarks no mesmo treino. Dimensões encontradas: {sorted(feature_dims)}")
     leaking = [s for s, splits in signer_splits.items() if len(splits) > 1]
     if leaking:
         raise SystemExit(f"Vazamento: {len(leaking)} pseudônimos aparecem em mais de uma partição. Corrija os splits por participante.")
 
     first_frame = train_rows[0]["frames"][0]
     feature_dim = len(first_frame)
-    if feature_dim < 3:
-        raise SystemExit("Vetor de landmarks muito pequeno.")
     token_counts = Counter(token for row in train_rows for token in tokenize(row["portuguese_text"]))
     tokens = sorted(t for t, n in token_counts.items() if n >= args.min_token_count)
     if not tokens:
