@@ -72,6 +72,8 @@ def main():
                     continue
                 dimensions[len(frame)] += 1
                 global_dimensions.add(len(frame))
+                if len(frame) not in (318, 360):
+                    issues.append(f"Linha {line_no}, quadro {frame_no}: dimensão {len(frame)} não reconhecida; use 318 (UECE) ou 360 (app)")
                 if args.expected_dim and len(frame) != args.expected_dim:
                     issues.append(f"Linha {line_no}, quadro {frame_no}: dimensão {len(frame)}, esperado {args.expected_dim}")
                 for value in frame:
