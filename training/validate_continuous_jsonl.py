@@ -16,6 +16,7 @@ def main():
 
     counts = Counter()
     dimensions = Counter()
+    global_dimensions = set()
     signers = defaultdict(set)
     sample_ids = set()
     issues = []
@@ -70,6 +71,7 @@ def main():
                     issues.append(f"Linha {line_no}, quadro {frame_no}: dimensão inconsistente")
                     continue
                 dimensions[len(frame)] += 1
+                global_dimensions.add(len(frame))
                 if args.expected_dim and len(frame) != args.expected_dim:
                     issues.append(f"Linha {line_no}, quadro {frame_no}: dimensão {len(frame)}, esperado {args.expected_dim}")
                 for value in frame:
@@ -79,6 +81,9 @@ def main():
                     except (TypeError, ValueError):
                         issues.append(f"Linha {line_no}, quadro {frame_no}: valor não numérico/finito")
                         break
+
+    if len(global_dimensions) > 1:
+        issues.append(f"Dimensões diferentes entre quadros/amostras: {sorted(global_dimensions)}")
 
     leakage = {s: sorted(parts) for s, parts in signers.items() if len(parts) > 1}
     if leakage:
