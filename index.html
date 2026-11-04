@@ -44,7 +44,7 @@
     <div class="tabs"><button class="tab active" id="ptl" type="button">Português → Libras</button><button class="tab" id="ltp" type="button">Libras → Português</button></div>
     <label class="label" for="source" id="sourceLabel">Digite uma mensagem em português</label>
     <textarea id="source" maxlength="500" placeholder="Ex.: Olá, tudo bem?"></textarea>
-    <div class="row" style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><span class="notice" id="characterCount">0 / 500 caracteres</span><button class="secondary" id="clearMessage" type="button" style="padding:7px 10px;font-size:12px">Limpar texto</button></div>
+    <div class="row" style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><span class="notice" id="characterCount">0 / 500 caracteres</span><span class="notice" id="draftStatus" aria-live="polite">Rascunho salvo somente neste aparelho.</span><button class="secondary" id="clearMessage" type="button" style="padding:7px 10px;font-size:12px">Limpar texto</button></div>
     <div class="actions"><button class="primary" id="process" type="button">Preparar mensagem</button><button class="secondary" id="speak" type="button">🔊 Ouvir texto</button></div>
     <div class="actions"><button class="secondary" id="copyMessage" type="button">📋 Copiar mensagem</button><button class="secondary" id="shareMessage" type="button">↗ Compartilhar</button></div>
     <div class="actions"><button class="secondary" id="voiceInput" type="button">🎙️ Falar mensagem</button></div>
@@ -133,7 +133,7 @@
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
   </section></details>
   </div>
-  <footer>SINAL LIBRAS • Versão 1.6 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 1.7 • Apoio de acessibilidade</footer>
 </main>
 <script>
   document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventListener("click",()=>{
@@ -146,8 +146,17 @@
   const source = document.getElementById("source");
   const characterCount = document.getElementById("characterCount");
   function updateCharacterCount(){characterCount.textContent=source.value.length+" / 500 caracteres";}
-  source.addEventListener("input",updateCharacterCount);
-  document.getElementById("clearMessage").addEventListener("click",()=>{source.value="";updateCharacterCount();output.textContent="Texto limpo. Digite uma nova mensagem quando quiser.";source.focus();});
+  const DRAFT_KEY="sinal-libras-rascunho-v1";
+  const draftStatus=document.getElementById("draftStatus");
+  try{const savedDraft=localStorage.getItem(DRAFT_KEY);if(savedDraft){source.value=savedDraft;draftStatus.textContent="Rascunho anterior recuperado deste aparelho.";}}
+  catch(e){draftStatus.textContent="Não foi possível acessar o armazenamento local.";}
+  function saveDraftAndCount(){
+    updateCharacterCount();
+    try{if(source.value.trim()){localStorage.setItem(DRAFT_KEY,source.value);draftStatus.textContent="Rascunho salvo automaticamente neste aparelho.";}else{localStorage.removeItem(DRAFT_KEY);draftStatus.textContent="Nenhum rascunho salvo.";}}
+    catch(e){draftStatus.textContent="Não foi possível salvar o rascunho neste aparelho.";}
+  }
+  source.addEventListener("input",saveDraftAndCount);
+  document.getElementById("clearMessage").addEventListener("click",()=>{source.value="";try{localStorage.removeItem(DRAFT_KEY);}catch(e){}saveDraftAndCount();output.textContent="Texto limpo. Digite uma nova mensagem quando quiser.";source.focus();});
   updateCharacterCount();
   const connectionStatus=document.getElementById("connectionStatus");
   function updateConnectionStatus(){const online=navigator.onLine;connectionStatus.textContent=online?"● Conectado à internet — recursos online disponíveis.":"● Sem internet — textos e favoritos salvos continuam no aparelho; VLibras e carregamento do modelo de mãos precisam de conexão.";connectionStatus.style.color=online?"#9bd8b0":"#f5c451";}
