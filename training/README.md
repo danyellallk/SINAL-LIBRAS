@@ -118,7 +118,7 @@ A inferência preserva o estado da GRU entre blocos e emite texto provisório à
 - O CTC aqui é uma linha de pesquisa experimental para alinhar uma sequência visual a tokens de português; não garante gramática natural, contexto, regionalismos ou interpretação correta. O script também descarta amostras cujo número de quadros seja insuficiente para alinhar os tokens pela regra CTC.
 - O dataset UECE tem vídeos contínuos e anotações ao nível da sequência, mas precisamos confirmar os nomes e a organização exata dos arquivos de landmarks e alinhar cada sequência ao texto correto antes de gerar o JSONL.
 - O dataset tem 55 sinais isolados e 123 sequências contínuas; é um corpus inicial pequeno para um tradutor geral. A documentação científica relata 5.335 gravações e uma divisão por participante/item que deve ser respeitada.
-- O dataset é CC BY-NC 4.0: uso não comercial, com atribuição. Não usar para lançar ou monetizar uma versão comercial sem autorização/licença adequada.
+- As informações consultadas indicam CC BY-NC 4.0, que restringe o uso comercial e exige atribuição. Antes de treinar, confira o conteúdo integral do `LICENSE.txt` da versão exata e as demais permissões aplicáveis. Não usar para lançar ou monetizar uma versão comercial sem autorização/licença adequada.
 - O modelo não foi treinado neste commit: nenhum corpus real foi baixado ou convertido automaticamente.
 
 
@@ -143,3 +143,16 @@ Para evitar baixar quase 774 MB diretamente no Android, há um notebook que faz 
 [ Abrir notebook de auditoria no GitHub ](https://github.com/danyellallk/SINAL-LIBRAS/blob/main/training/SINAL_LIBRAS_Auditoria_UECE.ipynb)
 
 No GitHub, abra o notebook e escolha **Open in Colab** (ou baixe o arquivo e envie para o Colab). Execute as células em ordem. O notebook não treina a IA; ele apenas produz o inventário técnico que precisamos para criar o conversor sem adivinhar o formato dos dados. O pacote tem aproximadamente 773,6 MB e pode levar algum tempo para baixar.
+
+
+## Inspecionar o pacote contínuo UECE sem extração
+
+O pacote `Libras-EQT-UECE-T.zip` é muito maior que o pacote de landmarks. Para descobrir a estrutura real das anotações sem extrair dezenas de GB, use:
+
+```bash
+python training/inspect_uece_continuous_package.py Libras-EQT-UECE-T.zip --samples 50
+```
+
+O script lista os diretórios e arquivos candidatos a anotações, contabiliza extensões e lê somente cabeçalhos NPY. Ele não extrai o ZIP, não carrega arrays e não executa pickle. Arquivos NPY com dtype de objeto são apenas identificados e não desserializados.
+
+**Não criamos ainda o conversor UECE → JSONL.** Primeiro precisamos conferir os identificadores de gravação nas anotações e provar que cada sequência de landmarks corresponde à sequência de glosas e ao texto em português corretos. Só então os pares poderão entrar no treinamento CTC.
