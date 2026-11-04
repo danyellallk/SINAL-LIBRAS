@@ -10,6 +10,7 @@ Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunica�
 - Prévia da câmera, mediante permissão do usuário.
 - Manifesto e cache básico para instalação/uso offline.
 - Orientação e botão de instalação como aplicativo no Android, quando o navegador oferece suporte.
+- Mensagens favoritas salvas localmente no aparelho, com opção de reutilizar e excluir.
 - Widget oficial VLibras para apoio à tradução de conteúdo textual português → Libras (requer internet).
 
 ## Limitações importantes
