@@ -21,7 +21,7 @@
     .cameraBox{background:#081b2b;border-radius:14px;min-height:160px;display:grid;place-items:center;text-align:center;padding:18px;color:var(--muted);margin-top:10px}video{width:100%;border-radius:12px;background:#000}
     .libraryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.signCard{background:#173b5b;border:1px solid #ffffff1c;border-radius:13px;padding:12px}.signCard strong{display:block}.signCard small{display:block;color:var(--muted);margin-top:5px;line-height:1.35}.tag{display:inline-block;color:#12263a;background:var(--gold);font-size:10px;font-weight:800;padding:4px 7px;border-radius:20px;margin-top:9px}.empty{color:var(--muted);font-size:13px;line-height:1.5;padding:14px;background:#081b2b;border-radius:12px;margin-top:12px}
     .fileInput{width:100%;margin-top:12px;color:var(--muted);font-size:13px}.videoPreview{display:none;width:100%;margin-top:12px;max-height:320px}.frameGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.frameGrid canvas{width:100%;border-radius:9px;background:#000}.filterRow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.filter{background:#254966;color:white;padding:8px 11px;font-size:12px}.filter.active{background:var(--gold);color:#172334}
-    footer{text-align:center;color:#8da9be;font-size:12px;padding:22px 0}
+    footer{text-align:center;color:#8da9be;font-size:12px;padding:22px 0}.tab-panel{display:none}.tab-panel.active{display:block}.bottom-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#071522f2;border-top:1px solid #ffffff22;backdrop-filter:blur(14px)}.bottom-nav button{background:transparent;color:#a9c0d2;padding:10px 4px;font-size:12px;border-radius:12px}.bottom-nav button span{display:block;font-size:19px;margin-bottom:3px}.bottom-nav button.active{background:#1b3b56;color:var(--gold)}body{padding-bottom:82px}
     @media(max-width:420px){.wrap{padding:17px 12px}.panel{padding:14px}.phrases,.libraryGrid{grid-template-columns:1fr 1fr}.tab{font-size:13px;padding:12px 7px}}
   </style>
 </head>
@@ -29,12 +29,16 @@
 <main class="wrap">
   <header class="brand"><div class="mark">S</div><div><h1>SINAL LIBRAS</h1><p>Comunicação que aproxima pessoas</p></div></header>
   <section class="intro"><h2>Vamos nos comunicar?</h2><p>Um espaço de apoio à comunicação entre português e Língua Brasileira de Sinais.</p></section>
+  <nav class="bottom-nav" aria-label="Navegação principal"><button class="active" type="button" data-tab-target="conversar"><span>💬</span>Conversar</button><button type="button" data-tab-target="favoritos"><span>☆</span>Favoritos</button><button type="button" data-tab-target="explorar"><span>🔎</span>Explorar</button><button type="button" data-tab-target="mais"><span>☰</span>Mais</button></nav>
+  <div class="tab-panel" id="tab-mais">
   <details class="group"><summary><span>Instalar no celular<span class="groupHint">Adicionar o SINAL à tela inicial</span></span></summary><section class="panel" id="installPanel">
     <div class="label">Leve o SINAL LIBRAS para a tela inicial</div>
     <p class="notice">Você pode instalar este protótipo no Android para abri-lo como um aplicativo. A instalação depende do navegador e pode não aparecer em todos os aparelhos.</p>
     <div class="actions"><button class="primary" id="installApp" type="button">＋ Instalar aplicativo</button></div>
     <p class="notice" id="installStatus" aria-live="polite">Se o botão não funcionar, abra o menu do Chrome e escolha “Instalar app” ou “Adicionar à tela inicial”.</p>
   </section></details>
+  </div>
+  <div class="tab-panel active" id="tab-conversar">
   <section class="panel" id="communicationPanel">
     <div class="label">Escolha o sentido da comunicação</div>
     <div class="tabs"><button class="tab active" id="ptl" type="button">Português → Libras</button><button class="tab" id="ltp" type="button">Libras → Português</button></div>
@@ -59,6 +63,8 @@
       <button class="phrase" data-text="Pode repetir, por favor?">Pode repetir? <small>Comunicação</small></button>
     </div>
   </section></details>
+  </div>
+  <div class="tab-panel" id="tab-favoritos">
   <details class="group"><summary><span>Mensagens favoritas<span class="groupHint">Guardar e reutilizar mensagens</span></span></summary><section class="panel" id="favoritesPanel">
     <div class="label">Minhas mensagens favoritas</div>
     <p class="notice">Guarde mensagens que você usa com frequência. Elas ficam salvas somente neste aparelho e podem ser usadas mesmo sem internet.</p>
@@ -66,6 +72,8 @@
     <div class="libraryGrid" id="favoriteList" aria-live="polite"></div>
     <div class="empty" id="noFavorites">Você ainda não salvou mensagens. Digite uma mensagem acima e toque em “Salvar mensagem digitada”.</div>
   </section></details>
+  </div>
+  <div class="tab-panel" id="tab-explorar">
   <details class="group"><summary><span>Ferramentas avançadas<span class="groupHint">Biblioteca, câmera, análise de vídeo e dados experimentais</span></span></summary><section class="panel" id="library">
     <div class="label">Biblioteca inicial de sinais</div>
     <p class="notice">Pesquise uma palavra ou escolha uma categoria. Esta lista organiza temas para montar o acervo; ainda não contém traduções ou vídeos validados.</p>
@@ -123,9 +131,16 @@
     <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
   </section></details>
-  <footer>SINAL LIBRAS • Versão 1.4 • Apoio de acessibilidade</footer>
+  </div>
+  <footer>SINAL LIBRAS • Versão 1.5 • Apoio de acessibilidade</footer>
 </main>
 <script>
+  document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventListener("click",()=>{
+    const target=button.dataset.tabTarget;
+    document.querySelectorAll(".tab-panel").forEach(panel=>panel.classList.toggle("active",panel.id==="tab-"+target));
+    document.querySelectorAll("[data-tab-target]").forEach(item=>item.classList.toggle("active",item===button));
+    window.scrollTo({top:0,behavior:"smooth"});
+  }));
   let direction = "ptl";
   const source = document.getElementById("source");
   const output = document.getElementById("output");
