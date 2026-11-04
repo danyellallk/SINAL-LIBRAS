@@ -13,7 +13,7 @@
     *{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#0d2941,#06111d 70%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
     .wrap{max-width:760px;margin:auto;padding:22px 16px 42px}.brand{display:flex;align-items:center;gap:12px;margin:10px 0 24px}.mark{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,var(--blue),#17618f);display:grid;place-items:center;font-size:25px;font-weight:900;color:white;box-shadow:0 8px 28px #0005}.brand h1{font-size:23px;margin:0;letter-spacing:1.5px}.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
     .intro h2{font-size:clamp(25px,6vw,34px);line-height:1.12;margin:0 0 9px}.intro p{color:var(--muted);line-height:1.5;margin:0 0 22px}
-    .panel{background:#102b46eF;border:1px solid #ffffff1c;border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0002}.label{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+    .panel{background:#102b46eF;border:1px solid #ffffff1c;border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0002}details.group{background:#102b46b8;border:1px solid #ffffff1c;border-radius:16px;margin:12px 0;overflow:hidden}details.group>summary{list-style:none;cursor:pointer;padding:16px;font-weight:750;display:flex;align-items:center;justify-content:space-between;gap:12px}details.group>summary::-webkit-details-marker{display:none}details.group>summary:after{content:"＋";color:var(--gold);font-size:20px}details.group[open]>summary:after{content:"−"}details.group>.panel{margin:0;border:0;border-radius:0;box-shadow:none;border-top:1px solid #ffffff18}.groupHint{font-size:12px;color:var(--muted);font-weight:400;display:block;margin-top:3px}.intro p{margin-bottom:16px}.brand{margin-bottom:18px}.label{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
     .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 18px}.tab,button{border:0;border-radius:12px;padding:13px 12px;font:inherit;font-weight:700;cursor:pointer}.tab{background:#1b3b56;color:#d9e8f4}.tab.active{background:var(--gold);color:#172334}
     textarea,.search{width:100%;border:1px solid #ffffff30;border-radius:13px;padding:14px;background:#081b2b;color:white;font:inherit;outline:none}textarea{min-height:118px;resize:vertical}textarea:focus,.search:focus{border-color:var(--blue)}
     .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}.primary{background:var(--blue);color:#041523;flex:1}.secondary{background:#254966;color:white}.output{background:#081b2b;border:1px dashed #5e88a5;border-radius:13px;padding:16px;min-height:88px;line-height:1.5;margin-top:10px}.notice{font-size:12px;color:var(--muted);line-height:1.5;margin:12px 2px 0}
@@ -29,13 +29,13 @@
 <main class="wrap">
   <header class="brand"><div class="mark">S</div><div><h1>SINAL LIBRAS</h1><p>Comunicação que aproxima pessoas</p></div></header>
   <section class="intro"><h2>Vamos nos comunicar?</h2><p>Um espaço de apoio à comunicação entre português e Língua Brasileira de Sinais.</p></section>
-  <section class="panel" id="installPanel">
+  <details class="group"><summary><span>Instalar no celular<span class="groupHint">Adicionar o SINAL à tela inicial</span></span></summary><section class="panel" id="installPanel">
     <div class="label">Leve o SINAL LIBRAS para a tela inicial</div>
     <p class="notice">Você pode instalar este protótipo no Android para abri-lo como um aplicativo. A instalação depende do navegador e pode não aparecer em todos os aparelhos.</p>
     <div class="actions"><button class="primary" id="installApp" type="button">＋ Instalar aplicativo</button></div>
     <p class="notice" id="installStatus" aria-live="polite">Se o botão não funcionar, abra o menu do Chrome e escolha “Instalar app” ou “Adicionar à tela inicial”.</p>
-  </section>
-  <section class="panel">
+  </section></details>
+  <section class="panel" id="communicationPanel">
     <div class="label">Escolha o sentido da comunicação</div>
     <div class="tabs"><button class="tab active" id="ptl" type="button">Português → Libras</button><button class="tab" id="ltp" type="button">Libras → Português</button></div>
     <label class="label" for="source" id="sourceLabel">Digite uma mensagem em português</label>
@@ -48,7 +48,7 @@
     <div class="output" id="output" aria-live="polite">Sua mensagem aparecerá aqui. Este protótipo ainda não realiza tradução automática de Libras.</div>
     <p class="notice" id="directionNote">A tradução para Libras exige sinais, expressões faciais e estrutura gramatical própria. Nesta primeira versão, estamos preparando a interface e os recursos básicos.</p>
   </section>
-  <section class="panel">
+  <details class="group"><summary><span>Frases rápidas<span class="groupHint">Toque para escolher uma mensagem pronta</span></span></summary><section class="panel">
     <div class="label">Frases úteis para começar</div>
     <div class="phrases">
       <button class="phrase" data-text="Olá, tudo bem?">Olá <small>Saudação</small></button>
@@ -58,15 +58,15 @@
       <button class="phrase" data-text="Não entendi">Não entendi <small>Comunicação</small></button>
       <button class="phrase" data-text="Pode repetir, por favor?">Pode repetir? <small>Comunicação</small></button>
     </div>
-  </section>
-  <section class="panel" id="favoritesPanel">
+  </section></details>
+  <details class="group"><summary><span>Mensagens favoritas<span class="groupHint">Guardar e reutilizar mensagens</span></span></summary><section class="panel" id="favoritesPanel">
     <div class="label">Minhas mensagens favoritas</div>
     <p class="notice">Guarde mensagens que você usa com frequência. Elas ficam salvas somente neste aparelho e podem ser usadas mesmo sem internet.</p>
     <div class="actions"><button class="primary" id="saveFavorite" type="button">☆ Salvar mensagem digitada</button></div>
     <div class="libraryGrid" id="favoriteList" aria-live="polite"></div>
     <div class="empty" id="noFavorites">Você ainda não salvou mensagens. Digite uma mensagem acima e toque em “Salvar mensagem digitada”.</div>
-  </section>
-  <section class="panel" id="library">
+  </section></details>
+  <details class="group"><summary><span>Ferramentas avançadas<span class="groupHint">Biblioteca, câmera, análise de vídeo e dados experimentais</span></span></summary><section class="panel" id="library">
     <div class="label">Biblioteca inicial de sinais</div>
     <p class="notice">Pesquise uma palavra ou escolha uma categoria. Esta lista organiza temas para montar o acervo; ainda não contém traduções ou vídeos validados.</p>
     <input class="search" id="searchSigns" type="search" placeholder="Pesquisar palavra ou tema..." aria-label="Pesquisar sinais">
@@ -118,12 +118,12 @@
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Versão 1.3 • Apoio de acessibilidade</footer>
   <section class="panel">
     <div class="label">Apoio de tradução com avatar 3D</div>
     <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
-  </section>
+  </section></details>
+  <footer>SINAL LIBRAS • Versão 1.4 • Apoio de acessibilidade</footer>
 </main>
 <script>
   let direction = "ptl";
