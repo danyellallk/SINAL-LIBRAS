@@ -181,3 +181,8 @@ No Colab:
 ```
 
 O script não desserializa NPY de objeto, não executa pickle e limita a leitura de cada membro. O resultado identifica nomes, tamanhos, extensões, candidatos a anotações e cabeçalhos NPY. Isso ainda não é a tradução: depois de conhecer o esquema real, precisamos decodificar os metadados com segurança e validar a correspondência entre IDs, glossas e frases em português.
+
+
+### Notebook simplificado para o pacote contínuo
+
+Para inspecionar o pacote de 35,6 GB sem baixá-lo inteiro, abra o [notebook de inspeção remota no Google Colab](https://colab.research.google.com/github/danyellallk/SINAL-LIBRAS/blob/main/training/SINAL_LIBRAS_Inspecao_Remota_UECE.ipynb) e escolha **Ambiente de execução → Executar tudo**. Ele tenta usar HTTP Range e gera um relatório TXT pequeno para compartilhar. Se o servidor não aceitar leitura parcial, a execução informa a falha e não tenta baixar o arquivo completo.
