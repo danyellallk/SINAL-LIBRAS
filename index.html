@@ -149,7 +149,7 @@
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
   </section></details>
   </div>
-  <footer>SINAL LIBRAS • Versão 2.3 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 2.4 • Apoio de acessibilidade</footer>
 </main>
 <script>
   document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventListener("click",()=>{
@@ -279,6 +279,7 @@
   });
   renderFavorites();
   let selectedVideoUrl=null;
+  let autoSequenceAfterFramePrep=false;
   const videoInput=document.getElementById("videoFile");
   const signVideo=document.getElementById("signVideo");
   const analyzeVideoButton=document.getElementById("analyzeVideo");
@@ -299,8 +300,9 @@
     if(file){
       loadVideoFile(file);
       if(file.type.startsWith("video/")&&file.size<=100*1024*1024){
+        autoSequenceAfterFramePrep=true;
         const status=document.getElementById("recordingStatus");
-        if(status)status.textContent="Vídeo da galeria selecionado: "+file.name+". Ele foi carregado neste aparelho. Vá à área Explorar e toque em “Preparar quadros do vídeo” para continuar.";
+        if(status)status.textContent="Vídeo da galeria selecionado. O SINAL LIBRAS vai preparar os quadros e analisar os movimentos automaticamente neste aparelho. Isso ainda não é uma tradução em português.";
       }
     }
   });
@@ -331,7 +333,8 @@
         const card=document.createElement("div");const label=document.createElement("small");label.className="notice";label.textContent="Quadro "+(i+1)+" • "+times[i].toFixed(1)+" s";
         card.append(canvas,label);videoFrames.append(card);
       }
-      analysisStatus.textContent="3 quadros extraídos localmente. Agora você pode testar a detecção dos pontos das mãos.";document.getElementById("detectHands").disabled=false;sequenceButton.disabled=false;
+      analysisStatus.textContent="3 quadros extraídos localmente. Iniciando agora a análise temporal dos movimentos; isso registra pontos, mas ainda não traduz Libras.";document.getElementById("detectHands").disabled=false;sequenceButton.disabled=false;
+      if(autoSequenceAfterFramePrep){autoSequenceAfterFramePrep=false;window.dispatchEvent(new Event("sinal-libras-frames-ready"));}
     }catch(error){analysisStatus.textContent=error.message||"Não foi possível preparar os quadros. Tente outro vídeo.";}
     finally{analyzeVideoButton.disabled=false;}
   });
@@ -402,6 +405,7 @@ let lastHandDataset=[];
 const sequenceButton=document.getElementById("analyzeSequence");
 const sequenceExportButton=document.getElementById("exportSequence");
 const sequenceStatus=document.getElementById("sequenceStatus");
+window.addEventListener("sinal-libras-frames-ready",()=>sequenceButton.click());
 sequenceButton.addEventListener("click",async()=>{
   const video=document.getElementById("signVideo");
   if(!video.src||!Number.isFinite(video.duration)||video.duration<=0){sequenceStatus.textContent="Selecione um vídeo válido e aguarde o carregamento antes de analisar.";return;}
