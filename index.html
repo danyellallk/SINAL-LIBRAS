@@ -91,13 +91,15 @@
     <p class="notice" id="handStatus" aria-live="polite">Depois de preparar os quadros, você poderá testar a detecção de mãos. É necessário internet para carregar o modelo gratuito; a análise das imagens ocorre no aparelho.</p>
     <div class="actions"><button class="secondary" id="exportHands" type="button" disabled>⬇️ Exportar dados das mãos (JSON)</button></div>
     <p class="notice" id="exportStatus" aria-live="polite">O arquivo conterá coordenadas dos pontos detectados, não uma tradução em Libras.</p>
+    <div class="actions"><button class="primary" id="analyzeSequence" type="button" disabled>🎞️ Analisar sequência do vídeo</button><button class="secondary" id="exportSequence" type="button" disabled>⬇️ Exportar sequência JSON</button></div>
+    <p class="notice" id="sequenceStatus" aria-live="polite">Esta etapa examina 12 momentos do vídeo para registrar como os pontos das mãos mudam ao longo do tempo. Não interpreta nem traduz os sinais.</p>
   </section>
   <section class="panel">
     <div class="label">Entrada por câmera — etapa inicial</div>
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Versão 1.0 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 1.1 • Apoio de acessibilidade</footer>
   <section class="panel">
     <div class="label">Apoio de tradução com avatar 3D</div>
     <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
@@ -250,7 +252,7 @@
         const card=document.createElement("div");const label=document.createElement("small");label.className="notice";label.textContent="Quadro "+(i+1)+" • "+times[i].toFixed(1)+" s";
         card.append(canvas,label);videoFrames.append(card);
       }
-      analysisStatus.textContent="3 quadros extraídos localmente. Agora você pode testar a detecção dos pontos das mãos.";document.getElementById("detectHands").disabled=false;
+      analysisStatus.textContent="3 quadros extraídos localmente. Agora você pode testar a detecção dos pontos das mãos.";document.getElementById("detectHands").disabled=false;sequenceButton.disabled=false;
     }catch(error){analysisStatus.textContent=error.message||"Não foi possível preparar os quadros. Tente outro vídeo.";}
     finally{analyzeVideoButton.disabled=false;}
   });
@@ -280,7 +282,61 @@ const detectButton=document.getElementById("detectHands");
 const handStatus=document.getElementById("handStatus");
 const handConnections=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 let handTask=null;
+let sequenceTask=null;
+let lastSequenceDataset=[];
 let lastHandDataset=[];
+const sequenceButton=document.getElementById("analyzeSequence");
+const sequenceExportButton=document.getElementById("exportSequence");
+const sequenceStatus=document.getElementById("sequenceStatus");
+sequenceButton.addEventListener("click",async()=>{
+  const video=document.getElementById("signVideo");
+  if(!video.src||!Number.isFinite(video.duration)||video.duration<=0){sequenceStatus.textContent="Selecione um vídeo válido e aguarde o carregamento antes de analisar.";return;}
+  sequenceButton.disabled=true;sequenceExportButton.disabled=true;lastSequenceDataset=[];
+  sequenceStatus.textContent="Preparando análise temporal. Isso pode levar alguns instantes no celular...";
+  try{
+    const visionModule=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs");
+    if(!sequenceTask){
+      const fileset=await visionModule.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
+      sequenceTask=await visionModule.HandLandmarker.createFromOptions(fileset,{
+        baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"},
+        runningMode:"VIDEO",numHands:2,minHandDetectionConfidence:0.45,minHandPresenceConfidence:0.45,minTrackingConfidence:0.45
+      });
+    }
+    const duration=video.duration;
+    const sampleCount=12;
+    const times=Array.from({length:sampleCount},(_,i)=>duration*(i+0.5)/sampleCount);
+    const canvas=document.createElement("canvas");
+    const scale=Math.min(1,480/(video.videoWidth||480));
+    canvas.width=Math.max(1,Math.round((video.videoWidth||480)*scale));canvas.height=Math.max(1,Math.round((video.videoHeight||360)*scale));
+    const ctx=canvas.getContext("2d");
+    let lastTimestamp=-1;
+    for(let i=0;i<times.length;i++){
+      await new Promise((resolve,reject)=>{
+        const onSeek=()=>{cleanup();resolve();};const onError=()=>{cleanup();reject(new Error("Não foi possível avançar para um momento do vídeo."));};
+        const cleanup=()=>{video.removeEventListener("seeked",onSeek);video.removeEventListener("error",onError);};
+        video.addEventListener("seeked",onSeek,{once:true});video.addEventListener("error",onError,{once:true});
+        video.currentTime=times[i];
+        if(Math.abs(video.currentTime-times[i])<0.001&&video.readyState>=2){cleanup();resolve();}
+      });
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      const timestamp=Math.max(lastTimestamp+1,Math.round(times[i]*1000));lastTimestamp=timestamp;
+      const result=sequenceTask.detectForVideo(canvas,timestamp);
+      const hands=result.landmarks||[];
+      lastSequenceDataset.push({frame:i+1,timeSeconds:Number(times[i].toFixed(3)),hands:hands.map((landmarks,handIndex)=>({handIndex:handIndex+1,handedness:result.handedness?.[handIndex]?.[0]?.categoryName||"não informado",points:landmarks.map((point,pointIndex)=>({point:pointIndex,x:Number(point.x.toFixed(6)),y:Number(point.y.toFixed(6)),z:Number(point.z.toFixed(6))}))}))});
+      sequenceStatus.textContent="Analisando quadro "+(i+1)+" de "+sampleCount+"...";
+    }
+    const detected=lastSequenceDataset.reduce((sum,frame)=>sum+frame.hands.length,0);
+    sequenceExportButton.disabled=detected===0;
+    sequenceStatus.textContent="Análise concluída: "+sampleCount+" momentos examinados e "+detected+" detecções de mãos registradas. Ainda não há interpretação do significado dos sinais.";
+  }catch(error){lastSequenceDataset=[];sequenceExportButton.disabled=true;sequenceStatus.textContent="Falha na análise temporal: "+(error?.message||"erro desconhecido")+". Confira a conexão e tente novamente.";
+  }finally{sequenceButton.disabled=false;}
+});
+sequenceExportButton.addEventListener("click",()=>{
+  if(!lastSequenceDataset.length){sequenceStatus.textContent="Faça a análise temporal antes de exportar.";return;}
+  const payload={project:"SINAL LIBRAS",formatVersion:1,createdAt:new Date().toISOString(),sampleCount:lastSequenceDataset.length,notice:"Sequência de coordenadas visuais; não representa reconhecimento ou tradução de Libras.",frames:lastSequenceDataset};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="sinal-libras-sequencia-temporal.json";document.body.append(link);link.click();link.remove();URL.revokeObjectURL(url);
+  sequenceStatus.textContent="Arquivo JSON da sequência preparado para salvar no aparelho.";
+});
 const exportButton=document.getElementById("exportHands");
 const exportStatus=document.getElementById("exportStatus");
 exportButton.addEventListener("click",()=>{
