@@ -18,12 +18,10 @@ def split_npy(raw):
         raise ValueError("Arquivo não possui assinatura NPY válida.")
     major, minor = raw[6], raw[7]
     if major == 1:
-        offset, size = 10, 2
         if len(raw) < offset:
             raise ValueError("Cabeçalho NPY truncado.")
         header_len = struct.unpack("<H", raw[8:10])[0]
     elif major in (2, 3):
-        offset, size = 12, 4
         if len(raw) < offset:
             raise ValueError("Cabeçalho NPY truncado.")
         header_len = struct.unpack("<I", raw[8:12])[0]
@@ -103,7 +101,7 @@ def main():
             if args.archive.stat().st_size > MAX_PAYLOAD + MAX_HEADER + 12:
                 raise SystemExit("Arquivo excede o limite de inspeção.")
             print(json.dumps(inspect_bytes(args.archive.read_bytes(), str(args.archive)), ensure_ascii=False, indent=2))
-    except (KeyError, OSError, RuntimeError, ValueError, zipfile.BadZipFile, pickletools.UnpickleableError) as exc:
+    except (KeyError, OSError, RuntimeError, ValueError, zipfile.BadZipFile) as exc:
         raise SystemExit(f"Falha na inspeção estática: {exc}")
 
 
