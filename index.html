@@ -42,6 +42,8 @@
     <textarea id="source" placeholder="Ex.: Olá, tudo bem?"></textarea>
     <div class="actions"><button class="primary" id="process" type="button">Preparar mensagem</button><button class="secondary" id="speak" type="button">🔊 Ouvir texto</button></div>
     <div class="actions"><button class="secondary" id="copyMessage" type="button">📋 Copiar mensagem</button><button class="secondary" id="shareMessage" type="button">↗ Compartilhar</button></div>
+    <div class="actions"><button class="secondary" id="voiceInput" type="button">🎙️ Falar mensagem</button></div>
+    <p class="notice" id="voiceStatus" aria-live="polite">A digitação por voz depende do suporte do navegador e da conexão.</p>
     <div class="label" style="margin-top:18px">Resultado / apoio visual</div>
     <div class="output" id="output" aria-live="polite">Sua mensagem aparecerá aqui. Este protótipo ainda não realiza tradução automática de Libras.</div>
     <p class="notice" id="directionNote">A tradução para Libras exige sinais, expressões faciais e estrutura gramatical própria. Nesta primeira versão, estamos preparando a interface e os recursos básicos.</p>
@@ -87,7 +89,7 @@
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Versão 0.6 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 0.7 • Apoio de acessibilidade</footer>
   <section class="panel">
     <div class="label">Apoio de tradução com avatar 3D</div>
     <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
@@ -116,6 +118,25 @@
     const value=source.value.trim(); if(!value){output.textContent="Digite um texto para ouvir.";return;}
     if(!("speechSynthesis" in window)){output.textContent="A leitura em voz alta não é compatível com este navegador.";return;}
     speechSynthesis.cancel(); const utterance=new SpeechSynthesisUtterance(value); utterance.lang="pt-BR"; speechSynthesis.speak(utterance);
+  });
+  let speechRecognition=null;
+  const voiceButton=document.getElementById("voiceInput");
+  const voiceStatus=document.getElementById("voiceStatus");
+  voiceButton.addEventListener("click",()=>{
+    const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!Recognition){voiceStatus.textContent="Seu navegador não oferece digitação por voz nesta página. Você pode digitar a mensagem normalmente.";return;}
+    if(direction!=="ptl"){voiceStatus.textContent="Para ditar em português, primeiro selecione Português → Libras.";return;}
+    if(speechRecognition){try{speechRecognition.stop();}catch(e){}speechRecognition=null;voiceButton.textContent="🎙️ Falar mensagem";return;}
+    const recognition=new Recognition();speechRecognition=recognition;recognition.lang="pt-BR";recognition.continuous=false;recognition.interimResults=false;
+    voiceButton.textContent="■ Parar de ouvir";voiceStatus.textContent="Ouvindo... fale sua mensagem em português.";
+    recognition.onresult=event=>{
+      const transcript=event.results?.[0]?.[0]?.transcript||"";
+      if(transcript){source.value=(source.value.trim()?source.value.trim()+" ":"")+transcript;voiceStatus.textContent="Voz convertida em texto. Revise a mensagem antes de compartilhar.";}
+      else voiceStatus.textContent="Não consegui entender. Tente falar novamente.";
+    };
+    recognition.onerror=event=>{voiceStatus.textContent=event.error==="not-allowed"?"Permita o uso do microfone no navegador para ditar.":"Não foi possível reconhecer a fala. Tente novamente ou digite o texto.";};
+    recognition.onend=()=>{speechRecognition=null;voiceButton.textContent="🎙️ Falar mensagem";};
+    try{recognition.start();}catch(e){speechRecognition=null;voiceButton.textContent="🎙️ Falar mensagem";voiceStatus.textContent="Não foi possível iniciar o microfone. Tente novamente.";}
   });
   async function copyText(value){
     if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value);return true;}
