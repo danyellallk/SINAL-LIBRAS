@@ -133,7 +133,7 @@ Execute primeiro o validador, para detectar dimensão incorreta, valores inváli
 python training/validate_continuous_jsonl.py training/continuous_dataset.jsonl --expected-dim 318
 ```
 
-Use `--expected-dim 360` apenas se os vetores vierem do extrator do aplicativo. Para o corpus UECE, a documentação descreve 106 landmarks com coordenadas x/y/z, portanto 318 valores por quadro. O validador não confirma que o vídeo e a tradução estão corretamente alinhados; isso exige auditoria de metadados e revisão linguística.
+Use `--expected-dim 360` apenas se os vetores vierem do extrator do aplicativo. Para o corpus UECE, a documentação descreve 106 landmarks com coordenadas x/y/z, portanto 318 valores por quadro. O validador rejeita dimensões desconhecidas (incluindo 126, que corresponde apenas às mãos) e detecta mistura de dimensões no mesmo JSONL. O treinador CTC também repete as verificações de IDs, valores finitos e esquema antes de iniciar, para evitar treino acidental com dados incompatíveis. O validador não confirma que o vídeo e a tradução estão corretamente alinhados; isso exige auditoria de metadados e revisão linguística.
 
 
 ## Auditoria do corpus UECE no celular (Google Colab)
