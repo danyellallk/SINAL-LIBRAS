@@ -98,10 +98,11 @@ class CausalSignTranslator(nn.Module):
         self.temporal = nn.GRU(hidden, hidden, batch_first=True, bidirectional=False)
         self.classifier = nn.Sequential(nn.Dropout(0.15), nn.Linear(hidden, vocab_size))
 
-    def forward(self, x):
+    def forward(self, x, hidden=None, return_hidden=False):
         x = self.input_projection(self.input_norm(x))
-        x, _ = self.temporal(x)
-        return self.classifier(x)
+        x, hidden = self.temporal(x, hidden)
+        logits = self.classifier(x)
+        return (logits, hidden) if return_hidden else logits
 
 
 def greedy_decode(log_probs, lengths, id_to_token, blank=0):
