@@ -116,6 +116,8 @@ def main():
     parser.add_argument("--seed", type=int, default=17)
     args = parser.parse_args()
 
+    if args.max_frames < 2 or args.epochs < 1 or args.batch_size < 1:
+        raise SystemExit("--max-frames deve ser >= 2; --epochs e --batch-size devem ser >= 1.")
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     rows = read_jsonl(args.dataset)
