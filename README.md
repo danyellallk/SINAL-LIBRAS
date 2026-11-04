@@ -9,9 +9,14 @@ Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunica�
 - Leitura de texto em voz alta usando os recursos do navegador.
 - Prévia da câmera, mediante permissão do usuário.
 - Manifesto e cache básico para instalação/uso offline.
+- Orientação e botão de instalação como aplicativo no Android, quando o navegador oferece suporte.
+- Widget oficial VLibras para apoio à tradução de conteúdo textual português → Libras (requer internet).
 
 ## Limitações importantes
 Esta versão **não traduz automaticamente** português para Libras e **não reconhece sinais** pela câmera. O resultado informa isso explicitamente. Libras é uma língua natural, com gramática e elementos não manuais próprios; não deve ser reduzida a uma lista de gestos ou tradução palavra por palavra.
+
+## Observação sobre o VLibras
+O widget é um serviço externo oficial e gratuito. Ele pode ajudar na compreensão de textos, mas a tradução automática pode conter erros e não substitui intérprete humano.
 
 ## Próximas etapas
 1. Criar biblioteca de sinais com vídeos revisados por pessoas fluentes em Libras.
