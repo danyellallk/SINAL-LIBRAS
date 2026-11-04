@@ -14,7 +14,7 @@ MAX_HEADER = 65_536
 
 def read_npy_header(stream):
     prefix = stream.read(8)
-    if len(prefix) != 8 or prefix[:6] != b"\\x93NUMPY":
+    if len(prefix) != 8 or prefix[:6] != b"\x93NUMPY":
         return {"header_error": "not_npy_or_truncated"}
     major, minor = prefix[6], prefix[7]
     if major == 1:
