@@ -111,13 +111,14 @@
     <div class="actions"><button class="primary" id="saveSample" type="button" disabled>＋ Guardar exemplo neste aparelho</button><button class="secondary" id="exportSamples" type="button">⬇️ Exportar conjunto JSON</button></div>
     <p class="notice" id="sampleStatus" aria-live="polite">Os exemplos ficam neste aparelho. Não são enviados ao servidor. A opção de revisão é uma declaração do usuário, não uma verificação automática.</p>
     <div class="empty" id="sampleCount">Nenhum exemplo guardado ainda.</div>
+    <div class="libraryGrid" id="savedSampleList" aria-live="polite"></div>
   </section>
   <section class="panel">
     <div class="label">Entrada por câmera — etapa inicial</div>
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Versão 1.2 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 1.3 • Apoio de acessibilidade</footer>
   <section class="panel">
     <div class="label">Apoio de tradução com avatar 3D</div>
     <p class="notice">Ative o botão flutuante de Libras para usar o widget oficial VLibras e traduzir o conteúdo textual desta página. A tradução automática pode conter erros e não substitui intérprete humano.</p>
@@ -358,14 +359,41 @@ const samplePermission=document.getElementById("samplePermission");
 const saveSampleButton=document.getElementById("saveSample");
 const sampleStatus=document.getElementById("sampleStatus");
 const sampleCount=document.getElementById("sampleCount");
+const savedSampleList=document.getElementById("savedSampleList");
 const SAMPLES_KEY="sinal-libras-exemplos-v1";
 function readSamples(){
   try{const data=JSON.parse(localStorage.getItem(SAMPLES_KEY)||"[]");return Array.isArray(data)?data:[];}
   catch(e){return [];}
 }
-function refreshSampleCount(){
-  const count=readSamples().length;
-  sampleCount.textContent=count===0?"Nenhum exemplo guardado ainda.":count+" exemplo(s) guardado(s) neste aparelho.";
+function writeSamples(samples){
+  try{localStorage.setItem(SAMPLES_KEY,JSON.stringify(samples));return true;}
+  catch(e){sampleStatus.textContent="Armazenamento cheio. Exporte os exemplos e remova alguns antes de adicionar novos.";return false;}
+}
+function renderSamples(){
+  const samples=readSamples();
+  sampleCount.textContent=samples.length===0?"Nenhum exemplo guardado ainda.":samples.length+" exemplo(s) guardado(s) neste aparelho. Limite recomendado: 20 para evitar ocupar muito espaço.";
+  savedSampleList.replaceChildren();
+  samples.forEach(sample=>{
+    const card=document.createElement("div");card.className="signCard";
+    const title=document.createElement("strong");title.textContent=sample.label||"Sem identificação";
+    const description=document.createElement("small");description.textContent=(sample.meaningOrContext||"Sem contexto informado")+" • "+(sample.reviewStatus==="revisado"?"Revisão declarada":"Aguardando validação");
+    const date=document.createElement("small");date.textContent=sample.createdAt?new Date(sample.createdAt).toLocaleDateString("pt-BR"):"Data não informada";
+    const actions=document.createElement("div");actions.className="actions";
+    const review=document.createElement("button");review.type="button";review.className="secondary";review.textContent=sample.reviewStatus==="revisado"?"Marcar como rascunho":"Marcar como revisado";
+    review.addEventListener("click",()=>{
+      const current=readSamples();const item=current.find(x=>x.id===sample.id);if(!item)return;
+      item.reviewStatus=item.reviewStatus==="revisado"?"rascunho":"revisado";
+      item.reviewNote=item.reviewStatus==="revisado"?"Status declarado pelo usuário; não verificado pelo aplicativo.":"Aguardando revisão por pessoa fluente em Libras.";
+      if(writeSamples(current)){renderSamples();sampleStatus.textContent="Situação atualizada. Lembre-se: a revisão não é verificada pelo aplicativo.";}
+    });
+    const remove=document.createElement("button");remove.type="button";remove.className="secondary";remove.textContent="Excluir";
+    remove.addEventListener("click",()=>{
+      if(!confirm("Excluir este exemplo salvo neste aparelho?"))return;
+      const current=readSamples().filter(x=>x.id!==sample.id);
+      if(writeSamples(current)){renderSamples();sampleStatus.textContent="Exemplo excluído deste aparelho.";}
+    });
+    actions.append(review,remove);card.append(title,description,date,actions);savedSampleList.append(card);
+  });
 }
 function updateSampleButton(){
   saveSampleButton.disabled=!lastSequenceDataset.length||!samplePermission.checked||!sampleLabelInput.value.trim();
@@ -377,24 +405,19 @@ saveSampleButton.addEventListener("click",()=>{
   if(!lastSequenceDataset.length){sampleStatus.textContent="Analise uma sequência de vídeo antes de guardar o exemplo.";return;}
   if(!label||!samplePermission.checked){sampleStatus.textContent="Informe uma identificação e confirme que tem autorização para usar o vídeo.";return;}
   const samples=readSamples();
-  if(samples.length>=100){sampleStatus.textContent="Limite local de 100 exemplos atingido. Exporte o conjunto antes de continuar.";return;}
+  if(samples.length>=20){sampleStatus.textContent="Limite recomendado de 20 exemplos atingido. Exporte o conjunto ou exclua algum exemplo antes de continuar.";return;}
   const detected=lastSequenceDataset.reduce((n,frame)=>n+frame.hands.length,0);
   if(detected===0){sampleStatus.textContent="Não foram detectadas mãos nesta sequência. Escolha outro vídeo antes de guardar.";return;}
   samples.push({
-    id:"exemplo-"+Date.now(),
-    label,
-    meaningOrContext:sampleMeaningInput.value.trim(),
+    id:"exemplo-"+Date.now(),label,meaningOrContext:sampleMeaningInput.value.trim(),
     reviewStatus:sampleReviewInput.value,
     reviewNote:sampleReviewInput.value==="revisado"?"Status declarado pelo usuário; não verificado pelo aplicativo.":"Aguardando revisão por pessoa fluente em Libras.",
-    createdAt:new Date().toISOString(),
-    frameCount:lastSequenceDataset.length,
-    detectedHandInstances:detected,
-    permissionConfirmed:true,
-    notice:"Dados de pontos das mãos e rótulo fornecido pelo usuário. Não constitui tradução validada automaticamente.",
+    createdAt:new Date().toISOString(),frameCount:lastSequenceDataset.length,
+    detectedHandInstances:detected,permissionConfirmed:true,
+    notice:"Coordenadas visuais e rótulo fornecido pelo usuário; não é tradução validada automaticamente.",
     frames:lastSequenceDataset
   });
-  try{localStorage.setItem(SAMPLES_KEY,JSON.stringify(samples));refreshSampleCount();sampleStatus.textContent="Exemplo guardado somente neste aparelho. Nenhum vídeo foi enviado.";sampleLabelInput.value="";sampleMeaningInput.value="";samplePermission.checked=false;updateSampleButton();}
-  catch(e){sampleStatus.textContent="Não foi possível guardar. O armazenamento do navegador pode estar cheio.";}
+  if(writeSamples(samples)){renderSamples();sampleStatus.textContent="Exemplo guardado somente neste aparelho. Nenhum vídeo foi enviado.";sampleLabelInput.value="";sampleMeaningInput.value="";samplePermission.checked=false;updateSampleButton();}
 });
 document.getElementById("exportSamples").addEventListener("click",()=>{
   const samples=readSamples();
@@ -404,8 +427,7 @@ document.getElementById("exportSamples").addEventListener("click",()=>{
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="sinal-libras-conjunto-de-exemplos.json";document.body.append(link);link.click();link.remove();URL.revokeObjectURL(url);
   sampleStatus.textContent="Conjunto JSON preparado para salvar no aparelho.";
 });
-refreshSampleCount();
-
+renderSamples();
 sequenceExportButton.addEventListener("click",()=>{
   if(!lastSequenceDataset.length){sequenceStatus.textContent="Faça a análise temporal antes de exportar.";return;}
   const payload={project:"SINAL LIBRAS",formatVersion:1,createdAt:new Date().toISOString(),sampleCount:lastSequenceDataset.length,notice:"Sequência de coordenadas visuais; não representa reconhecimento ou tradução de Libras.",frames:lastSequenceDataset};
