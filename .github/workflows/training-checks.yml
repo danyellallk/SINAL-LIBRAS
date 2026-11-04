@@ -64,7 +64,7 @@ jobs:
               {"sample_id":"b1","signer_id":"same-person","split":"dev","portuguese_text":"boa tarde","frames":[frame,frame]},
           ]
           Path("/tmp/sinal-leak.jsonl").write_text(
-              "\\n".join(json.dumps(row) for row in rows), encoding="utf-8"
+              "\n".join(json.dumps(row) for row in rows), encoding="utf-8"
           )
           PY
           if python training/validate_continuous_jsonl.py /tmp/sinal-leak.jsonl --expected-dim 318; then
