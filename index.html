@@ -139,6 +139,7 @@
     <div class="label">Entrada por câmera — etapa inicial</div>
     <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Grave uma pessoa sinalizando em Libras ou selecione um vídeo do aparelho.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay muted playsinline style="display:none"></video></div>
     <div class="actions"><button class="primary" id="startRecording" type="button" disabled>⏺️ Iniciar gravação</button><button class="secondary" id="stopRecording" type="button" disabled>■ Parar e usar vídeo</button></div>
+    <div class="actions"><button class="secondary" id="chooseGalleryVideo" type="button">🖼️ Escolher vídeo da galeria</button></div>
     <p class="notice" id="recordingStatus" aria-live="polite">A gravação fica no aparelho. Depois, use “Preparar quadros do vídeo” para analisar os movimentos. Isso ainda não é tradução automática.</p>
     <p class="notice">Dê preferência a enquadrar rosto, tronco e as duas mãos, com boa iluminação. Grave somente com consentimento da pessoa. O arquivo permanece local neste aparelho.</p>
   </section>
@@ -293,7 +294,17 @@
     analyzeVideoButton.disabled=false;
     document.getElementById("videoStatus").textContent="Vídeo local: "+file.name+" ("+(file.size/1024/1024).toFixed(1)+" MB). Permanece somente neste aparelho.";
   }
-  videoInput.addEventListener("change",e=>loadVideoFile(e.target.files&&e.target.files[0]));
+  videoInput.addEventListener("change",e=>{
+    const file=e.target.files&&e.target.files[0];
+    if(file){
+      loadVideoFile(file);
+      if(file.type.startsWith("video/")&&file.size<=100*1024*1024){
+        const status=document.getElementById("recordingStatus");
+        if(status)status.textContent="Vídeo da galeria selecionado: "+file.name+". Ele foi carregado neste aparelho. Vá à área Explorar e toque em “Preparar quadros do vídeo” para continuar.";
+      }
+    }
+  });
+  document.getElementById("chooseGalleryVideo").addEventListener("click",()=>videoInput.click());
   analyzeVideoButton.addEventListener("click",async()=>{
     if(!selectedVideoUrl)return;
     analyzeVideoButton.disabled=true;videoFrames.replaceChildren();analysisStatus.textContent="Preparando imagens do vídeo...";
