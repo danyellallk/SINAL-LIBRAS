@@ -18,10 +18,12 @@ def split_npy(raw):
         raise ValueError("Arquivo não possui assinatura NPY válida.")
     major, minor = raw[6], raw[7]
     if major == 1:
+        offset = 10
         if len(raw) < offset:
             raise ValueError("Cabeçalho NPY truncado.")
         header_len = struct.unpack("<H", raw[8:10])[0]
     elif major in (2, 3):
+        offset = 12
         if len(raw) < offset:
             raise ValueError("Cabeçalho NPY truncado.")
         header_len = struct.unpack("<I", raw[8:12])[0]
