@@ -32,6 +32,11 @@ def main():
     global_max = float("-inf")
     finite_values = 0
     nonfinite_values = 0
+    zero_values = 0
+    column_min = None
+    column_max = None
+    column_sum = None
+    column_count = None
     with zipfile.ZipFile(args.archive) as zf:
         members = [x for x in zf.infolist() if not x.is_dir() and x.filename.lower().endswith(".npy")]
         for info in members:
@@ -54,6 +59,23 @@ def main():
                 finite_count = int(finite.sum())
                 finite_values += finite_count
                 nonfinite_values += int(vals.size - finite_count)
+                zero_values += int(np.count_nonzero(vals == 0))
+                # Estatísticas por coordenada, acumuladas em todos os quadros.
+                if column_min is None:
+                    column_min = np.full(arr.shape[1], np.inf, dtype=np.float64)
+                    column_max = np.full(arr.shape[1], -np.inf, dtype=np.float64)
+                    column_sum = np.zeros(arr.shape[1], dtype=np.float64)
+                    column_count = np.zeros(arr.shape[1], dtype=np.int64)
+                if arr.shape[1] == len(column_min):
+                    for col in range(arr.shape[1]):
+                        col_values = vals[:, col]
+                        col_finite = np.isfinite(col_values)
+                        if col_finite.any():
+                            selected = col_values[col_finite]
+                            column_min[col] = min(column_min[col], float(selected.min()))
+                            column_max[col] = max(column_max[col], float(selected.max()))
+                            column_sum[col] += float(selected.sum())
+                            column_count[col] += int(selected.size)
                 if finite_count:
                     vmin = float(vals[finite].min())
                     vmax = float(vals[finite].max())
@@ -83,6 +105,18 @@ def main():
         "frame_count_max": max(frame_counts) if frame_counts else None,
         "finite_values": finite_values,
         "nonfinite_values": nonfinite_values,
+        "zero_values": zero_values,
+        "zero_fraction": (zero_values / (finite_values + nonfinite_values)) if (finite_values + nonfinite_values) else None,
+        "per_coordinate_statistics": [
+            {
+                "coordinate_index": i,
+                "min": float(column_min[i]) if column_count[i] else None,
+                "max": float(column_max[i]) if column_count[i] else None,
+                "mean": float(column_sum[i] / column_count[i]) if column_count[i] else None,
+                "finite_count": int(column_count[i]),
+            }
+            for i in range(len(column_min))
+        ] if column_min is not None else [],
         "global_min": global_min if global_min != float("inf") else None,
         "global_max": global_max if global_max != float("-inf") else None,
         "sample_arrays": samples,
