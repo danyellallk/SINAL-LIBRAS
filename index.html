@@ -116,6 +116,9 @@
     <p class="notice">Depois de analisar um vídeo, você pode associar uma palavra ou descrição à sequência para montar um conjunto de exemplos. Use somente vídeos seus ou com autorização explícita da pessoa filmada.</p>
     <label class="label" for="sampleLabel">Palavra ou identificação do sinal</label>
     <input class="search" id="sampleLabel" type="text" maxlength="80" placeholder="Ex.: BOM DIA (rótulo provisório)">
+    <label class="label" for="sampleSigner" style="display:block;margin-top:12px">Identificador da pessoa sinalizadora (pseudônimo)</label>
+    <input class="search" id="sampleSigner" type="text" maxlength="40" placeholder="Ex.: pessoa-01 (não use nome real)">
+    <p class="notice">Use o mesmo pseudônimo para a mesma pessoa em todos os vídeos. Isso ajuda a separar treino e teste sem misturar vídeos da mesma pessoa.</p>
     <label class="label" for="sampleMeaning" style="display:block;margin-top:12px">Significado ou contexto em português</label>
     <textarea id="sampleMeaning" placeholder="Descreva o contexto da frase, sem inventar uma tradução..."></textarea>
     <label class="label" for="sampleReview" style="display:block;margin-top:12px">Situação da revisão</label>
@@ -143,7 +146,7 @@
     <p class="notice">O recurso é fornecido pelo projeto VLibras, do Governo Federal e da UFPB. É necessário estar conectado à internet.</p>
   </section></details>
   </div>
-  <footer>SINAL LIBRAS • Versão 1.8 • Apoio de acessibilidade</footer>
+  <footer>SINAL LIBRAS • Versão 1.9 • Apoio de acessibilidade</footer>
 </main>
 <script>
   document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventListener("click",()=>{
@@ -397,6 +400,7 @@ sequenceButton.addEventListener("click",async()=>{
 
 const sampleLabelInput=document.getElementById("sampleLabel");
 const sampleMeaningInput=document.getElementById("sampleMeaning");
+const sampleSignerInput=document.getElementById("sampleSigner");
 const sampleReviewInput=document.getElementById("sampleReview");
 const samplePermission=document.getElementById("samplePermission");
 const saveSampleButton=document.getElementById("saveSample");
@@ -446,13 +450,14 @@ samplePermission.addEventListener("change",updateSampleButton);
 saveSampleButton.addEventListener("click",()=>{
   const label=sampleLabelInput.value.trim();
   if(!lastSequenceDataset.length){sampleStatus.textContent="Analise uma sequência de vídeo antes de guardar o exemplo.";return;}
-  if(!label||!samplePermission.checked){sampleStatus.textContent="Informe uma identificação e confirme que tem autorização para usar o vídeo.";return;}
+  const signerId=sampleSignerInput.value.trim();
+  if(!label||!signerId||!samplePermission.checked){sampleStatus.textContent="Informe o rótulo, um pseudônimo da pessoa sinalizadora e confirme a autorização de uso.";return;}
   const samples=readSamples();
   if(samples.length>=20){sampleStatus.textContent="Limite recomendado de 20 exemplos atingido. Exporte o conjunto ou exclua algum exemplo antes de continuar.";return;}
   const detected=lastSequenceDataset.reduce((n,frame)=>n+frame.hands.length,0);
   if(detected===0){sampleStatus.textContent="Não foram detectadas mãos nesta sequência. Escolha outro vídeo antes de guardar.";return;}
   samples.push({
-    id:"exemplo-"+Date.now(),label,meaningOrContext:sampleMeaningInput.value.trim(),
+    id:"exemplo-"+Date.now(),label,signerId,meaningOrContext:sampleMeaningInput.value.trim(),
     reviewStatus:sampleReviewInput.value,
     reviewNote:sampleReviewInput.value==="revisado"?"Status declarado pelo usuário; não verificado pelo aplicativo.":"Aguardando revisão por pessoa fluente em Libras.",
     createdAt:new Date().toISOString(),frameCount:lastSequenceDataset.length,
@@ -460,12 +465,15 @@ saveSampleButton.addEventListener("click",()=>{
     notice:"Coordenadas visuais e rótulo fornecido pelo usuário; não é tradução validada automaticamente.",
     frames:lastSequenceDataset
   });
-  if(writeSamples(samples)){renderSamples();sampleStatus.textContent="Exemplo guardado somente neste aparelho. Nenhum vídeo foi enviado.";sampleLabelInput.value="";sampleMeaningInput.value="";samplePermission.checked=false;updateSampleButton();}
+  if(writeSamples(samples)){renderSamples();sampleStatus.textContent="Exemplo guardado somente neste aparelho. Nenhum vídeo foi enviado.";sampleLabelInput.value="";sampleSignerInput.value="";sampleMeaningInput.value="";samplePermission.checked=false;updateSampleButton();}
 });
 document.getElementById("exportSamples").addEventListener("click",()=>{
   const samples=readSamples();
   if(!samples.length){sampleStatus.textContent="Ainda não há exemplos guardados para exportar.";return;}
-  const payload={project:"SINAL LIBRAS",formatVersion:1,createdAt:new Date().toISOString(),sampleCount:samples.length,notice:"Conjunto experimental. Rótulos e situação de revisão são declarações dos usuários; não representam validação automática nem reconhecimento de Libras.",samples};
+  const splitForSigner=id=>{const s=String(id||"sem-identificador");let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;const bucket=h%20;return bucket<3?"teste":bucket<6?"validacao":"treino";};
+  const prepared=samples.map(sample=>({...sample,split:splitForSigner(sample.signerId||"legado-sem-pseudonimo")}));
+  const splitCounts=prepared.reduce((a,s)=>{a[s.split]=(a[s.split]||0)+1;return a;},{treino:0,validacao:0,teste:0});
+  const payload={project:"SINAL LIBRAS",formatVersion:2,createdAt:new Date().toISOString(),sampleCount:prepared.length,splitMethod:"Divisão determinística por pseudônimo do sinalizador; vídeos da mesma pessoa ficam no mesmo grupo.",splitCounts,notice:"Conjunto experimental de pontos corporais. Rótulos são fornecidos pelo usuário e não são validação linguística. Verifique autorização, qualidade e equilíbrio dos grupos antes de treinar.",samples:prepared};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="sinal-libras-conjunto-de-exemplos.json";document.body.append(link);link.click();link.remove();URL.revokeObjectURL(url);
   sampleStatus.textContent="Conjunto JSON preparado para salvar no aparelho.";
