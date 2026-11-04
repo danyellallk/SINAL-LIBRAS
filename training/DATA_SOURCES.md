@@ -25,7 +25,7 @@ Uma autorização deve esclarecer, no mínimo, uso para pesquisa/treinamento de 
 - Licença declarada: Creative Commons CC BY-NC 4.0.
 - A licença exige atribuição e **não permite uso comercial**. Antes de qualquer uso, conferir o README, a estrutura, as anotações, as condições de consentimento e se a tarefa/labels servem ao nosso objetivo.
 
-Este dataset é uma opção para um experimento estritamente não comercial, respeitando a licença e citando os autores. Ele não deve ser usado em uma versão comercial ou monetizada sem uma autorização/licença diferente. O arquivo de landmarks é menor que os vídeos, mas ainda tem centenas de MB; não é adequado para baixar e treinar diretamente no celular Android.
+Este dataset é uma opção para um experimento estritamente não comercial, respeitando a licença e citando os autores. Ele não deve ser usado em uma versão comercial ou monetizada sem uma autorização/licença diferente. A documentação do próprio dataset informa que o pacote RGB contém vídeos organizados por glossas, incluindo amostras isoladas e contínuas; o pacote processado contém partições de anotações `.npy` (train/dev/test), quadros e recursos; e o ZIP de landmarks contém coordenadas em CSV/JSON. Isso o torna uma fonte promissora para pesquisar tradução contínua, mas ainda precisamos auditar o conteúdo e confirmar como as frases e glossas estão alinhadas. O arquivo de landmarks tem centenas de MB; não é adequado para baixar e treinar diretamente no celular Android.
 
 ## Outra fonte em avaliação — V-Librasil
 
@@ -50,3 +50,16 @@ O repositório contém extração de landmarks e um classificador GRU experiment
 - LIBRAS-EQT-UECE v4: https://zenodo.org/records/21398895
 - Licença CC BY-NC 4.0: https://creativecommons.org/licenses/by-nc/4.0/
 - V-Librasil dataset card (licença ainda precisa ser confirmada): https://huggingface.co/datasets/ibmectech/v-librasil-raw
+
+
+## Inspecionar o pacote de landmarks antes de converter
+
+Depois de obter legalmente `Landmarks.zip` no ambiente de treinamento, examine os nomes, formatos, cabeçalhos NPY e pequenas amostras sem extrair todo o arquivo:
+
+```bash
+python training/inspect_libras_eqt.py Landmarks.zip --limit 25
+```
+
+O inspetor não executa arquivos serializados, não extrai o ZIP e não treina modelo. Ele serve para identificar a estrutura real dos dados antes de escrever um conversor específico. Não carregue arquivos `.npy` com `allow_pickle=True` de fontes não confiáveis.
+
+**Importante:** os arquivos CSV/JSON do dataset externo ainda não são automaticamente compatíveis com `prepare_dataset.py` ou `train_sequence.py`. Não misture esses dados ao treino até mapear corretamente coordenadas, glossas, frases, identidade do participante e partições oficiais. A partição oficial por participante deve ser preservada quando disponível.
