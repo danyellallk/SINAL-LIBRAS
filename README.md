@@ -3,6 +3,7 @@
 Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunicação entre português e Libras.
 
 ## O que existe nesta versão
+- Catálogo de fontes externas para consulta de vídeos e sinais: TV INES (cotidiano e A Vida em Libras), Corpus de Libras/UFSC, GoiásLibras, V-Librasil/UFPE e WikiLibras. O app abre os acervos originais e não copia vídeos de terceiros.
 - Salvamento automático do rascunho de conversa no armazenamento local do aparelho, com recuperação ao reabrir e remoção pelo botão “Limpar texto”. O conteúdo não é enviado ao servidor.
 - Navegação por quatro abas fixas no rodapé: Conversar, Favoritos, Explorar e Mais. Cada aba mostra somente sua área de conteúdo para facilitar o uso no celular.
 - Área de conversa aprimorada: contador de até 500 caracteres, botão para limpar o texto e aviso automático de conexão/offline.
@@ -24,6 +25,9 @@ Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunica�
 - Análise experimental de 12 momentos do vídeo com MediaPipe em modo temporal, exportando sequências de coordenadas e tempos para estudo posterior.
 - Organização local de exemplos: permite associar rótulo e contexto a uma sequência temporal, declarar se aguarda validação ou foi revisada por pessoa fluente em Libras, confirmar autorização de uso do vídeo e exportar o conjunto em JSON. Os dados ficam no armazenamento local do navegador.
 - Gerenciamento dos exemplos locais: lista os registros salvos, permite alterar a situação de revisão declarada e excluir exemplos individualmente. O limite é de 20 registros para reduzir o risco de lotar o armazenamento do navegador.
+
+## Uso responsável dos acervos externos
+Os links do catálogo servem para consulta e descoberta de material. A disponibilidade pública de um vídeo não significa autorização para baixá-lo, republicá-lo, extrair quadros ou incorporá-lo a um conjunto de treinamento. Antes de qualquer reutilização, é necessário verificar a licença e os termos de cada acervo e obter autorização quando aplicável. Corpus de pesquisa pode exigir cadastro, acesso aprovado ou consentimento específico. O app registra apenas links de origem nesta etapa.
 
 ## Limitações importantes
 Esta versão **não traduz automaticamente** português para Libras e **não reconhece o significado de sinais** pela câmera ou por vídeos. A detecção de pontos das mãos é apenas uma etapa visual, não uma tradução. O JSON exportado contém coordenadas de até 21 pontos por mão nos quadros amostrados; não contém rótulos de sinais, frases ou interpretação semântica. A extração de quadros serve apenas para inspeção visual e preparação de uma futura etapa de reconhecimento. A análise temporal amostra 12 momentos do vídeo e registra mudanças nas coordenadas das mãos, mas não reconhece palavras ou frases em Libras. O cadastro de exemplos apenas associa rótulos informados pelo usuário às coordenadas; a situação de revisão é autodeclarada e não é verificada pelo aplicativo. É necessário obter autorização da pessoa filmada e validar os exemplos com pessoas fluentes em Libras. O resultado informa isso explicitamente. Libras é uma língua natural, com gramática e elementos não manuais próprios; não deve ser reduzida a uma lista de gestos ou tradução palavra por palavra.
