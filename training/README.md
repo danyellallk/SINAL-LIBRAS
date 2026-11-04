@@ -156,3 +156,14 @@ python training/inspect_uece_continuous_package.py Libras-EQT-UECE-T.zip --sampl
 O script lista os diretórios e arquivos candidatos a anotações, contabiliza extensões e lê somente cabeçalhos NPY. Ele não extrai o ZIP, não carrega arrays e não executa pickle. Arquivos NPY com dtype de objeto são apenas identificados e não desserializados.
 
 **Não criamos ainda o conversor UECE → JSONL.** Primeiro precisamos conferir os identificadores de gravação nas anotações e provar que cada sequência de landmarks corresponde à sequência de glosas e ao texto em português corretos. Só então os pares poderão entrar no treinamento CTC.
+
+
+### Inspeção estática das anotações NPY
+
+O README oficial v4 mostra as anotações contínuas em `annotations/train.npy`, `annotations/dev.npy` e `annotations/test.npy`. Se o cabeçalho indicar dtype de objeto, o script abaixo permite examinar os opcodes do payload pickle sem desserializar o objeto:
+
+```bash
+python training/inspect_npy_pickle_static.py Libras-EQT-UECE-T.zip --member "Libras-EQT-UECE-T/annotations/train.npy"
+```
+
+Substitua o caminho interno pelo nome exato mostrado pelo inventário do ZIP. O script apenas analisa a estrutura do pickle com `pickletools`; não usa `pickle.load`, `numpy.load(..., allow_pickle=True)` nem executa objetos. A saída pode revelar classes/referências globais e a estrutura de serialização, mas não é um conversor e não recupera valores de anotação. Nunca execute pickle de origem externa.
