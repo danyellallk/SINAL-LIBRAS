@@ -63,3 +63,16 @@ python training/inspect_libras_eqt.py Landmarks.zip --limit 25
 O inspetor não executa arquivos serializados, não extrai o ZIP e não treina modelo. Ele serve para identificar a estrutura real dos dados antes de escrever um conversor específico. Não carregue arquivos `.npy` com `allow_pickle=True` de fontes não confiáveis.
 
 **Importante:** os arquivos CSV/JSON do dataset externo ainda não são automaticamente compatíveis com `prepare_dataset.py` ou `train_sequence.py`. Não misture esses dados ao treino até mapear corretamente coordenadas, glossas, frases, identidade do participante e partições oficiais. A partição oficial por participante deve ser preservada quando disponível.
+
+## Detalhes linguísticos confirmados na documentação científica
+
+O artigo associado ao dataset descreve 178 itens: 55 sinais isolados e 123 sequências contínuas, com 5.335 gravações processadas. As amostras contínuas têm anotação ao nível da sequência: cada vídeo/sequência é associado a uma sequência ordenada de glosas e à tradução em português, sem fronteiras temporais manuais para cada glosa. Isso permite investigar treinamento fracamente supervisionado com CTC/atenção.
+
+A representação descrita no artigo tem 106 landmarks por quadro (318 valores x/y/z): corpo, duas mãos e pontos faciais selecionados. Os landmarks são entregues em CSV/JSON. A documentação do Zenodo confirma que o pacote processado contém arquivos `.npy` de partição e imagens 256x256; o pacote Landmarks é separado.
+
+**Implicação para o SINAL LIBRAS:** o caminho mais promissor é treinar uma sequência visual → texto em português, e não apenas classificar cada gesto como uma palavra. O novo protótipo CTC é um primeiro experimento causal para esse caminho, mas ainda depende de um conversor que mapeie os CSV/JSON reais aos pares de sequência e tradução.
+
+Fontes:
+- Artigo e descrição técnica do corpus: https://doi.org/10.1109/ACCESS.2026.3715086
+- README do Zenodo: https://zenodo.org/records/21398895/preview/README.md?include_deleted=0
+- Licença da versão 4: https://zenodo.org/records/21398895/preview/LICENSE.txt?include_deleted=0
