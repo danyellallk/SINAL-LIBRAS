@@ -16,9 +16,10 @@ Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunica�
 - Widget oficial VLibras para apoio à tradução de conteúdo textual português → Libras (requer internet).
 - Seleção de vídeo local de até 100 MB e extração de três quadros para inspeção visual, sem enviar o arquivo à internet.
 - Detecção experimental de até duas mãos e de 21 pontos por mão nos quadros, com MediaPipe no navegador; o vídeo e os quadros são processados localmente. É necessário internet para carregar a biblioteca e o modelo.
+- Exportação local dos pontos detectados em arquivo JSON, com coordenadas normalizadas e indicação de lateralidade quando disponível.
 
 ## Limitações importantes
-Esta versão **não traduz automaticamente** português para Libras e **não reconhece o significado de sinais** pela câmera ou por vídeos. A detecção de pontos das mãos é apenas uma etapa visual, não uma tradução. A extração de quadros serve apenas para inspeção visual e preparação de uma futura etapa de reconhecimento. O resultado informa isso explicitamente. Libras é uma língua natural, com gramática e elementos não manuais próprios; não deve ser reduzida a uma lista de gestos ou tradução palavra por palavra.
+Esta versão **não traduz automaticamente** português para Libras e **não reconhece o significado de sinais** pela câmera ou por vídeos. A detecção de pontos das mãos é apenas uma etapa visual, não uma tradução. O JSON exportado contém coordenadas de até 21 pontos por mão nos quadros amostrados; não contém rótulos de sinais, frases ou interpretação semântica. A extração de quadros serve apenas para inspeção visual e preparação de uma futura etapa de reconhecimento. O resultado informa isso explicitamente. Libras é uma língua natural, com gramática e elementos não manuais próprios; não deve ser reduzida a uma lista de gestos ou tradução palavra por palavra.
 
 ## Privacidade da detecção de mãos
 O processamento dos quadros com MediaPipe acontece no dispositivo, mas a biblioteca e o modelo são carregados de serviços externos e a biblioteca pode enviar métricas de uso. O vídeo selecionado não é enviado para esses serviços. Consulte a documentação oficial do [MediaPipe Hand Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker/web_js).
