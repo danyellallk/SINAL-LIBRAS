@@ -12,45 +12,37 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-def make_npy_object(payload, version=(1, 0)):
+def make_npy(payload, descr="|O", version=(1, 0), shape=(1,)):
     header = repr({
-        "descr": "|O",
+        "descr": descr,
         "fortran_order": False,
-        "shape": (1,),
+        "shape": shape,
     }).encode("latin1")
-    padding = (-(10 + len(header) + 1)) % 16
-    header += b" " * padding + b"\n"
-    return b"\x93NUMPY" + bytes([1, 0]) + len(header).to_bytes(2, "little") + header + payload
+    prefix_size = 10 if version == (1, 0) else 12
+    header += b" " * (-(prefix_size + len(header) + 1) % 16) + b"\n"
+    length_size = 2 if version == (1, 0) else 4
+    length = len(header).to_bytes(length_size, "little")
+    return b"\x93NUMPY" + bytes(version) + length + header + payload
 
 
 sample_pickle = pickle.dumps({"text": "sample", "values": [1, 2, 3]}, protocol=4)
-result = module.inspect_bytes(make_npy_object(sample_pickle), "synthetic.npy")
-assert result["object_dtype"] is True
-assert result["pickle_opcode_count"] > 0
-assert result["pickle_end_seen"] is True
-assert "safety" in result
+for version in ((1, 0), (2, 0), (3, 0)):
+    result = module.inspect_bytes(make_npy(sample_pickle, version=version), f"synthetic-v{version[0]}.npy")
+    assert result["object_dtype"] is True
+    assert result["pickle_opcode_count"] > 0
+    assert result["pickle_end_seen"] is True
+    assert "safety" in result
 
-for version in ((2, 0), (3, 0)):
-    version_result = module.inspect_bytes(make_npy_object(sample_pickle, version), f"synthetic-v{version[0]}.npy")
-    assert version_result["pickle_end_seen"] is True
-
-numeric_header = repr({
-    "descr": "<f4",
-    "fortran_order": False,
-    "shape": (2, 3),
-}).encode("latin1")
-padding = (-(10 + len(numeric_header) + 1)) % 16
-numeric_header += b" " * padding + b"\n"
-numeric = b"\x93NUMPY" + bytes([1, 0]) + len(numeric_header).to_bytes(2, "little") + numeric_header + b"\x00" * 24
+numeric = make_npy(b"\x00" * 24, descr="<f4", shape=(2, 3))
 numeric_result = module.inspect_bytes(numeric, "numeric.npy")
 assert numeric_result["object_dtype"] is False
 assert "pickle_opcode_count" not in numeric_result
 
-print("OK: NPY objeto analisado por opcodes; nenhum pickle foi desserializado.")
-
 try:
-    module.split_npy(b"\\x93NUMPY" + bytes([1, 0]) + b"\\x00")
+    module.split_npy(b"\x93NUMPY" + bytes([1, 0]) + b"\x00")
 except ValueError:
     pass
 else:
     raise AssertionError("Cabeçalho truncado deveria ser rejeitado.")
+
+print("OK: NPY v1/v2/v3 e cabeçalho truncado; nenhum pickle foi desserializado.")
