@@ -72,3 +72,6 @@ Foi identificada a base LIBRAS-EQT-UECE (DOI: 10.5281/zenodo.21398895), que cont
 
 ### Selecionar vídeo da galeria (v2.4)
 Na área da câmera, o botão **Escolher vídeo da galeria** abre os vídeos disponíveis no Android. Ao selecionar um arquivo de até 100 MB, ele é carregado localmente e fica pronto para a etapa **Explorar → Preparar quadros do vídeo**. O seletor usa o mesmo fluxo local de análise; nenhum vídeo é enviado automaticamente.
+
+## Fontes para treinamento e uso responsável
+Consulte [`training/DATA_SOURCES.md`](training/DATA_SOURCES.md) para as fontes de dados avaliadas, licenças, restrições do YouTube e plano de treinamento responsável. Nenhum vídeo do YouTube é baixado ou usado automaticamente pelo projeto.
