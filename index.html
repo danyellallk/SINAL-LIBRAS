@@ -20,7 +20,7 @@
     .phrases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.phrase{background:#173b5b;color:white;text-align:left;border:1px solid #ffffff18}.phrase small{display:block;color:#c1d7e8;font-weight:400;margin-top:4px}
     .cameraBox{background:#081b2b;border-radius:14px;min-height:160px;display:grid;place-items:center;text-align:center;padding:18px;color:var(--muted);margin-top:10px}video{width:100%;border-radius:12px;background:#000}
     .libraryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.signCard{background:#173b5b;border:1px solid #ffffff1c;border-radius:13px;padding:12px}.signCard strong{display:block}.signCard small{display:block;color:var(--muted);margin-top:5px;line-height:1.35}.tag{display:inline-block;color:#12263a;background:var(--gold);font-size:10px;font-weight:800;padding:4px 7px;border-radius:20px;margin-top:9px}.empty{color:var(--muted);font-size:13px;line-height:1.5;padding:14px;background:#081b2b;border-radius:12px;margin-top:12px}
-    .fileInput{width:100%;margin-top:12px;color:var(--muted);font-size:13px}.videoPreview{display:none;width:100%;margin-top:12px;max-height:320px}.filterRow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.filter{background:#254966;color:white;padding:8px 11px;font-size:12px}.filter.active{background:var(--gold);color:#172334}
+    .fileInput{width:100%;margin-top:12px;color:var(--muted);font-size:13px}.videoPreview{display:none;width:100%;margin-top:12px;max-height:320px}.frameGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.frameGrid canvas{width:100%;border-radius:9px;background:#000}.filterRow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.filter{background:#254966;color:white;padding:8px 11px;font-size:12px}.filter.active{background:var(--gold);color:#172334}
     footer{text-align:center;color:#8da9be;font-size:12px;padding:22px 0}
     @media(max-width:420px){.wrap{padding:17px 12px}.panel{padding:14px}.phrases,.libraryGrid{grid-template-columns:1fr 1fr}.tab{font-size:13px;padding:12px 7px}}
   </style>
@@ -83,6 +83,10 @@
     <input class="fileInput" id="videoFile" type="file" accept="video/*">
     <video class="videoPreview" id="signVideo" controls playsinline></video>
     <p class="notice" id="videoStatus">Nenhum vídeo selecionado.</p>
+    <div class="actions"><button class="primary" id="analyzeVideo" type="button" disabled>🔎 Preparar quadros do vídeo</button></div>
+    <p class="notice">Esta etapa extrai três imagens do vídeo no próprio celular para inspeção. Ainda não identifica sinais nem gera tradução automática; nenhum vídeo ou quadro é enviado.</p>
+    <div class="frameGrid" id="videoFrames" aria-live="polite"></div>
+    <p class="notice" id="analysisStatus" aria-live="polite"></p>
   </section>
   <section class="panel">
     <div class="label">Entrada por câmera — etapa inicial</div>
@@ -201,11 +205,50 @@
   });
   renderFavorites();
   let selectedVideoUrl=null;
-  document.getElementById("videoFile").addEventListener("change",e=>{
-    const file=e.target.files&&e.target.files[0];const player=document.getElementById("signVideo");if(!file)return;
+  const videoInput=document.getElementById("videoFile");
+  const signVideo=document.getElementById("signVideo");
+  const analyzeVideoButton=document.getElementById("analyzeVideo");
+  const videoFrames=document.getElementById("videoFrames");
+  const analysisStatus=document.getElementById("analysisStatus");
+  videoInput.addEventListener("change",e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    videoFrames.replaceChildren();analysisStatus.textContent="";
+    if(!file.type.startsWith("video/")){document.getElementById("videoStatus").textContent="Escolha um arquivo de vídeo válido.";analyzeVideoButton.disabled=true;return;}
+    if(file.size>100*1024*1024){document.getElementById("videoStatus").textContent="O vídeo é maior que 100 MB. Escolha um arquivo menor para evitar travamentos no celular.";analyzeVideoButton.disabled=true;return;}
     if(selectedVideoUrl)URL.revokeObjectURL(selectedVideoUrl);
-    selectedVideoUrl=URL.createObjectURL(file);player.src=selectedVideoUrl;player.style.display="block";
-    document.getElementById("videoStatus").textContent="Vídeo local: "+file.name+". Ele permanece somente neste aparelho.";
+    selectedVideoUrl=URL.createObjectURL(file);signVideo.src=selectedVideoUrl;signVideo.style.display="block";
+    analyzeVideoButton.disabled=false;
+    document.getElementById("videoStatus").textContent="Vídeo local: "+file.name+" ("+(file.size/1024/1024).toFixed(1)+" MB). Permanece somente neste aparelho.";
+  });
+  analyzeVideoButton.addEventListener("click",async()=>{
+    if(!selectedVideoUrl)return;
+    analyzeVideoButton.disabled=true;videoFrames.replaceChildren();analysisStatus.textContent="Preparando imagens do vídeo...";
+    try{
+      if(!signVideo.duration||!Number.isFinite(signVideo.duration))await new Promise((resolve,reject)=>{
+        const ok=()=>{cleanup();resolve();};const fail=()=>{cleanup();reject(new Error("Não foi possível ler o vídeo."));};
+        const cleanup=()=>{signVideo.removeEventListener("loadedmetadata",ok);signVideo.removeEventListener("error",fail);};
+        signVideo.addEventListener("loadedmetadata",ok,{once:true});signVideo.addEventListener("error",fail,{once:true});
+      });
+      const duration=signVideo.duration;
+      if(!Number.isFinite(duration)||duration<=0)throw new Error("A duração do vídeo não pôde ser identificada.");
+      const times=[duration*.2,duration*.5,duration*.8].map(t=>Math.min(t,Math.max(0,duration-.15)));
+      for(let i=0;i<times.length;i++){
+        await new Promise((resolve,reject)=>{
+          const ok=()=>{cleanup();resolve();};const fail=()=>{cleanup();reject(new Error("Falha ao ler um quadro do vídeo."));};
+          const cleanup=()=>{signVideo.removeEventListener("seeked",ok);signVideo.removeEventListener("error",fail);};
+          signVideo.addEventListener("seeked",ok,{once:true});signVideo.addEventListener("error",fail,{once:true});
+          signVideo.currentTime=times[i];
+        });
+        const canvas=document.createElement("canvas");
+        const scale=Math.min(1,480/signVideo.videoWidth);
+        canvas.width=Math.max(1,Math.round(signVideo.videoWidth*scale));canvas.height=Math.max(1,Math.round(signVideo.videoHeight*scale));
+        canvas.getContext("2d").drawImage(signVideo,0,0,canvas.width,canvas.height);
+        const card=document.createElement("div");const label=document.createElement("small");label.className="notice";label.textContent="Quadro "+(i+1)+" • "+times[i].toFixed(1)+" s";
+        card.append(canvas,label);videoFrames.append(card);
+      }
+      analysisStatus.textContent="3 quadros extraídos localmente. Isto é apenas uma preparação visual: o SINAL LIBRAS ainda não reconhece nem traduz os sinais.";
+    }catch(error){analysisStatus.textContent=error.message||"Não foi possível preparar os quadros. Tente outro vídeo.";}
+    finally{analyzeVideoButton.disabled=false;}
   });
   document.getElementById("camera").addEventListener("click",async()=>{
     const video=document.getElementById("cameraVideo"), intro=document.getElementById("cameraIntro");
