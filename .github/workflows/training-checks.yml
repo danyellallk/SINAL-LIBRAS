@@ -1,0 +1,45 @@
+name: Training pipeline checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "training/**"
+      - ".github/workflows/training-checks.yml"
+  pull_request:
+    paths:
+      - "training/**"
+      - ".github/workflows/training-checks.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check Python syntax
+        run: python -m compileall -q training
+      - name: Smoke-test JSONL validator
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          frame = [0.0] * 318
+          rows = [
+              {"sample_id":"a1","signer_id":"p1","split":"train","portuguese_text":"bom dia","frames":[frame,frame]},
+              {"sample_id":"b1","signer_id":"p2","split":"dev","portuguese_text":"boa tarde","frames":[frame,frame]},
+              {"sample_id":"c1","signer_id":"p3","split":"test","portuguese_text":"boa noite","frames":[frame,frame]},
+          ]
+          Path("/tmp/sinal-smoke.jsonl").write_text(
+              "\n".join(json.dumps(row) for row in rows), encoding="utf-8"
+          )
+          PY
+          python training/validate_continuous_jsonl.py /tmp/sinal-smoke.jsonl --expected-dim 318
