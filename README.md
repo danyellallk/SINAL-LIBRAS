@@ -4,8 +4,9 @@ Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunica�
 
 ## O que existe nesta versão
 - Navegação por quatro abas fixas no rodapé: Conversar, Favoritos, Explorar e Mais. Cada aba mostra somente sua área de conteúdo para facilitar o uso no celular.
+- Área de conversa aprimorada: contador de até 500 caracteres, botão para limpar o texto e aviso automático de conexão/offline.
 - Interface v1.4 simplificada: a área de conversa fica em destaque; frases rápidas, favoritos, instalação e ferramentas avançadas ficam organizados em seções expansíveis para reduzir a quantidade de botões visíveis.
-- Interface responsiva para Android e navegador.
+- Interface responsiva para Android e navegador. Rodapé e indicadores acessíveis com mensagens de estado.
 - Alternância entre os sentidos Português → Libras e Libras → Português.
 - Frases rápidas para preencher a mensagem.
 - Leitura de texto em voz alta usando os recursos do navegador.
