@@ -17,6 +17,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive")
     parser.add_argument("--limit-samples", type=int, default=8)
+    parser.add_argument("--output-json", help="Salva o relatório completo neste arquivo JSON")
+    parser.add_argument("--compact", action="store_true", help="Imprime um resumo curto, mantendo o JSON completo no arquivo")
     args = parser.parse_args()
     if args.limit_samples < 1 or args.limit_samples > 100:
         raise SystemExit("--limit-samples deve ficar entre 1 e 100")
@@ -124,7 +126,48 @@ def main():
         "errors_first_30": errors[:30],
         "warning": "A auditoria descreve estrutura e valores; nao confirma significado linguistico, particoes oficiais ou alinhamento com frases."
     }
-    print(json.dumps(report, ensure_ascii=False, indent=2))
+    if args.output_json:
+        from pathlib import Path
+        output_path = Path(args.output_json)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    if args.compact:
+        coordinate_rows = report["per_coordinate_statistics"]
+        valid_means = [x["mean"] for x in coordinate_rows if x["mean"] is not None]
+        coordinate_mins = [x["min"] for x in coordinate_rows if x["min"] is not None]
+        coordinate_maxs = [x["max"] for x in coordinate_rows if x["max"] is not None]
+        compact = {
+            "archive_npy_files": report["archive_npy_files"],
+            "labels_count": report["labels_count"],
+            "labels_top_20": report["labels_top_100"][:20],
+            "informant_folders": report["informant_folders"],
+            "shape_top_20": Counter(report["shape_distribution"]).most_common(20),
+            "dtype_distribution": report["dtype_distribution"],
+            "frame_count_min": report["frame_count_min"],
+            "frame_count_median": report["frame_count_median"],
+            "frame_count_max": report["frame_count_max"],
+            "finite_values": report["finite_values"],
+            "nonfinite_values": report["nonfinite_values"],
+            "zero_fraction": report["zero_fraction"],
+            "global_min": report["global_min"],
+            "global_max": report["global_max"],
+            "coordinate_count": len(coordinate_rows),
+            "coordinates_with_data": len(valid_means),
+            "coordinates_constant": sum(1 for x in coordinate_rows if x["min"] is not None and x["min"] == x["max"]),
+            "coordinate_min_range": [min(coordinate_mins, default=None), max(coordinate_mins, default=None)],
+            "coordinate_max_range": [min(coordinate_maxs, default=None), max(coordinate_maxs, default=None)],
+            "coordinate_mean_range": [min(valid_means, default=None), max(valid_means, default=None)],
+            "coordinate_first_12": coordinate_rows[:12],
+            "coordinate_last_12": coordinate_rows[-12:],
+            "errors_count": report["errors_count"],
+            "errors_first_10": report["errors_first_30"][:10],
+            "full_report_path": args.output_json,
+            "warning": report["warning"],
+        }
+        print(json.dumps(compact, ensure_ascii=False, indent=2))
+    else:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
