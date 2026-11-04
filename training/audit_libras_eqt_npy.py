@@ -26,6 +26,9 @@ def main():
     labels = Counter()
     informants = Counter()
     shapes = Counter()
+    feature_dimensions = Counter()
+    labels_by_dimension = defaultdict(Counter)
+    dataset_groups = Counter()
     dtypes = Counter()
     errors = []
     samples = []
@@ -35,10 +38,7 @@ def main():
     finite_values = 0
     nonfinite_values = 0
     zero_values = 0
-    column_min = None
-    column_max = None
-    column_sum = None
-    column_count = None
+    coordinate_stats = {}
     with zipfile.ZipFile(args.archive) as zf:
         members = [x for x in zf.infolist() if not x.is_dir() and x.filename.lower().endswith(".npy")]
         for info in members:
@@ -54,6 +54,11 @@ def main():
                     errors.append({"file": info.filename, "error": "array nao possui 2 dimensoes", "shape": list(arr.shape)})
                     continue
                 shapes[str(list(arr.shape))] += 1
+                feature_dim = int(arr.shape[1])
+                feature_dimensions[str(feature_dim)] += 1
+                labels_by_dimension[str(feature_dim)][label] += 1
+                dataset_group = parts[1] if len(parts) > 1 else "[grupo_desconhecido]"
+                dataset_groups[dataset_group] += 1
                 dtypes[str(arr.dtype)] += 1
                 frame_counts.append(int(arr.shape[0]))
                 vals = np.asarray(arr, dtype=np.float64)
@@ -63,21 +68,23 @@ def main():
                 nonfinite_values += int(vals.size - finite_count)
                 zero_values += int(np.count_nonzero(vals == 0))
                 # Estatísticas por coordenada, acumuladas em todos os quadros.
-                if column_min is None:
-                    column_min = np.full(arr.shape[1], np.inf, dtype=np.float64)
-                    column_max = np.full(arr.shape[1], -np.inf, dtype=np.float64)
-                    column_sum = np.zeros(arr.shape[1], dtype=np.float64)
-                    column_count = np.zeros(arr.shape[1], dtype=np.int64)
-                if arr.shape[1] == len(column_min):
-                    for col in range(arr.shape[1]):
-                        col_values = vals[:, col]
-                        col_finite = np.isfinite(col_values)
-                        if col_finite.any():
-                            selected = col_values[col_finite]
-                            column_min[col] = min(column_min[col], float(selected.min()))
-                            column_max[col] = max(column_max[col], float(selected.max()))
-                            column_sum[col] += float(selected.sum())
-                            column_count[col] += int(selected.size)
+                if feature_dim not in coordinate_stats:
+                    coordinate_stats[feature_dim] = {
+                        "min": np.full(feature_dim, np.inf, dtype=np.float64),
+                        "max": np.full(feature_dim, -np.inf, dtype=np.float64),
+                        "sum": np.zeros(feature_dim, dtype=np.float64),
+                        "count": np.zeros(feature_dim, dtype=np.int64),
+                    }
+                stats = coordinate_stats[feature_dim]
+                for col in range(feature_dim):
+                    col_values = vals[:, col]
+                    col_finite = np.isfinite(col_values)
+                    if col_finite.any():
+                        selected = col_values[col_finite]
+                        stats["min"][col] = min(stats["min"][col], float(selected.min()))
+                        stats["max"][col] = max(stats["max"][col], float(selected.max()))
+                        stats["sum"][col] += float(selected.sum())
+                        stats["count"][col] += int(selected.size)
                 if finite_count:
                     vmin = float(vals[finite].min())
                     vmax = float(vals[finite].max())
@@ -101,6 +108,18 @@ def main():
         "labels_top_100": labels.most_common(100),
         "informant_folders": dict(informants),
         "shape_distribution": dict(shapes),
+        "feature_dimension_file_counts": dict(feature_dimensions),
+        "dataset_group_file_counts": dict(dataset_groups),
+        "labels_by_feature_dimension": {dim: counts.most_common() for dim, counts in labels_by_dimension.items()},
+        "coordinate_statistics_by_feature_dimension": {
+            str(dim): [
+                {"coordinate_index": i, "min": float(stats["min"][i]) if stats["count"][i] else None,
+                 "max": float(stats["max"][i]) if stats["count"][i] else None,
+                 "mean": float(stats["sum"][i] / stats["count"][i]) if stats["count"][i] else None,
+                 "finite_count": int(stats["count"][i])}
+                for i in range(dim)
+            ] for dim, stats in coordinate_stats.items()
+        },
         "dtype_distribution": dict(dtypes),
         "frame_count_min": min(frame_counts) if frame_counts else None,
         "frame_count_median": float(np.median(frame_counts)) if frame_counts else None,
@@ -109,16 +128,7 @@ def main():
         "nonfinite_values": nonfinite_values,
         "zero_values": zero_values,
         "zero_fraction": (zero_values / (finite_values + nonfinite_values)) if (finite_values + nonfinite_values) else None,
-        "per_coordinate_statistics": [
-            {
-                "coordinate_index": i,
-                "min": float(column_min[i]) if column_count[i] else None,
-                "max": float(column_max[i]) if column_count[i] else None,
-                "mean": float(column_sum[i] / column_count[i]) if column_count[i] else None,
-                "finite_count": int(column_count[i]),
-            }
-            for i in range(len(column_min))
-        ] if column_min is not None else [],
+        "per_coordinate_statistics": [],
         "global_min": global_min if global_min != float("inf") else None,
         "global_max": global_max if global_max != float("-inf") else None,
         "sample_arrays": samples,
@@ -143,6 +153,10 @@ def main():
             "labels_top_20": report["labels_top_100"][:20],
             "informant_folders": report["informant_folders"],
             "shape_top_20": Counter(report["shape_distribution"]).most_common(20),
+            "feature_dimension_file_counts": report["feature_dimension_file_counts"],
+            "dataset_group_file_counts": report["dataset_group_file_counts"],
+            "labels_by_feature_dimension_top_10": {dim: counts[:10] for dim, counts in report["labels_by_feature_dimension"].items()},
+            "coordinate_statistics_by_feature_dimension": {dim: {"coordinate_count": len(rows), "first_6": rows[:6], "last_6": rows[-6:]} for dim, rows in report["coordinate_statistics_by_feature_dimension"].items()},
             "dtype_distribution": report["dtype_distribution"],
             "frame_count_min": report["frame_count_min"],
             "frame_count_median": report["frame_count_median"],
