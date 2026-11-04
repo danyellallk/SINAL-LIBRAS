@@ -3,6 +3,7 @@
 Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunicação entre português e Libras.
 
 ## O que existe nesta versão
+- Navegação por quatro abas fixas no rodapé: Conversar, Favoritos, Explorar e Mais. Cada aba mostra somente sua área de conteúdo para facilitar o uso no celular.
 - Interface v1.4 simplificada: a área de conversa fica em destaque; frases rápidas, favoritos, instalação e ferramentas avançadas ficam organizados em seções expansíveis para reduzir a quantidade de botões visíveis.
 - Interface responsiva para Android e navegador.
 - Alternância entre os sentidos Português → Libras e Libras → Português.
