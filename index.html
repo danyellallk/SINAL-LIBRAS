@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102b46">
-  <meta name="description" content="SINAL LIBRAS — protótipo gratuito de apoio à comunicação em português e Libras.">
+  <meta name="description" content="SINAL LIBRAS — apoio gratuito à comunicação em português e Libras.">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>SINAL LIBRAS</title>
@@ -15,12 +15,14 @@
     .intro h2{font-size:clamp(25px,6vw,34px);line-height:1.12;margin:0 0 9px}.intro p{color:var(--muted);line-height:1.5;margin:0 0 22px}
     .panel{background:#102b46eF;border:1px solid #ffffff1c;border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0002}.label{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
     .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 18px}.tab,button{border:0;border-radius:12px;padding:13px 12px;font:inherit;font-weight:700;cursor:pointer}.tab{background:#1b3b56;color:#d9e8f4}.tab.active{background:var(--gold);color:#172334}
-    textarea{width:100%;min-height:118px;resize:vertical;border:1px solid #ffffff30;border-radius:13px;padding:14px;background:#081b2b;color:white;font:inherit;outline:none}textarea:focus{border-color:var(--blue)}
+    textarea,.search{width:100%;border:1px solid #ffffff30;border-radius:13px;padding:14px;background:#081b2b;color:white;font:inherit;outline:none}textarea{min-height:118px;resize:vertical}textarea:focus,.search:focus{border-color:var(--blue)}
     .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}.primary{background:var(--blue);color:#041523;flex:1}.secondary{background:#254966;color:white}.output{background:#081b2b;border:1px dashed #5e88a5;border-radius:13px;padding:16px;min-height:88px;line-height:1.5;margin-top:10px}.notice{font-size:12px;color:var(--muted);line-height:1.5;margin:12px 2px 0}
     .phrases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.phrase{background:#173b5b;color:white;text-align:left;border:1px solid #ffffff18}.phrase small{display:block;color:#c1d7e8;font-weight:400;margin-top:4px}
-    .cameraBox{background:#081b2b;border-radius:14px;min-height:160px;display:grid;place-items:center;text-align:center;padding:18px;color:var(--muted);margin-top:10px}video{width:100%;border-radius:12px;display:none;background:#000}
+    .cameraBox{background:#081b2b;border-radius:14px;min-height:160px;display:grid;place-items:center;text-align:center;padding:18px;color:var(--muted);margin-top:10px}video{width:100%;border-radius:12px;background:#000}
+    .libraryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.signCard{background:#173b5b;border:1px solid #ffffff1c;border-radius:13px;padding:12px}.signCard strong{display:block}.signCard small{display:block;color:var(--muted);margin-top:5px;line-height:1.35}.tag{display:inline-block;color:#12263a;background:var(--gold);font-size:10px;font-weight:800;padding:4px 7px;border-radius:20px;margin-top:9px}.empty{color:var(--muted);font-size:13px;line-height:1.5;padding:14px;background:#081b2b;border-radius:12px;margin-top:12px}
+    .fileInput{width:100%;margin-top:12px;color:var(--muted);font-size:13px}.videoPreview{display:none;width:100%;margin-top:12px;max-height:320px}.filterRow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.filter{background:#254966;color:white;padding:8px 11px;font-size:12px}.filter.active{background:var(--gold);color:#172334}
     footer{text-align:center;color:#8da9be;font-size:12px;padding:22px 0}
-    @media(max-width:420px){.wrap{padding:17px 12px}.panel{padding:14px}.phrases{grid-template-columns:1fr 1fr}.tab{font-size:13px;padding:12px 7px}}
+    @media(max-width:420px){.wrap{padding:17px 12px}.panel{padding:14px}.phrases,.libraryGrid{grid-template-columns:1fr 1fr}.tab{font-size:13px;padding:12px 7px}}
   </style>
 </head>
 <body>
@@ -29,16 +31,10 @@
   <section class="intro"><h2>Vamos nos comunicar?</h2><p>Um espaço de apoio à comunicação entre português e Língua Brasileira de Sinais.</p></section>
   <section class="panel">
     <div class="label">Escolha o sentido da comunicação</div>
-    <div class="tabs">
-      <button class="tab active" id="ptl" type="button">Português → Libras</button>
-      <button class="tab" id="ltp" type="button">Libras → Português</button>
-    </div>
+    <div class="tabs"><button class="tab active" id="ptl" type="button">Português → Libras</button><button class="tab" id="ltp" type="button">Libras → Português</button></div>
     <label class="label" for="source" id="sourceLabel">Digite uma mensagem em português</label>
     <textarea id="source" placeholder="Ex.: Olá, tudo bem?"></textarea>
-    <div class="actions">
-      <button class="primary" id="process" type="button">Preparar mensagem</button>
-      <button class="secondary" id="speak" type="button">🔊 Ouvir texto</button>
-    </div>
+    <div class="actions"><button class="primary" id="process" type="button">Preparar mensagem</button><button class="secondary" id="speak" type="button">🔊 Ouvir texto</button></div>
     <div class="label" style="margin-top:18px">Resultado / apoio visual</div>
     <div class="output" id="output" aria-live="polite">Sua mensagem aparecerá aqui. Este protótipo ainda não realiza tradução automática de Libras.</div>
     <p class="notice" id="directionNote">A tradução para Libras exige sinais, expressões faciais e estrutura gramatical própria. Nesta primeira versão, estamos preparando a interface e os recursos básicos.</p>
@@ -54,12 +50,30 @@
       <button class="phrase" data-text="Pode repetir, por favor?">Pode repetir? <small>Comunicação</small></button>
     </div>
   </section>
+  <section class="panel" id="library">
+    <div class="label">Biblioteca inicial de sinais</div>
+    <p class="notice">Pesquise uma palavra ou escolha uma categoria. Esta lista organiza temas para montar o acervo; ainda não contém traduções ou vídeos validados.</p>
+    <input class="search" id="searchSigns" type="search" placeholder="Pesquisar palavra ou tema..." aria-label="Pesquisar sinais">
+    <div class="filterRow" id="filters">
+      <button class="filter active" data-filter="todos">Todos</button>
+      <button class="filter" data-filter="Saudações">Saudações</button>
+      <button class="filter" data-filter="Cotidiano">Cotidiano</button>
+      <button class="filter" data-filter="Cortesia">Cortesia</button>
+    </div>
+    <div class="libraryGrid" id="signList"></div>
+    <div class="empty" id="noSigns" hidden>Nenhum tema encontrado. Tente outra palavra.</div>
+    <div class="label" style="margin-top:20px">Visualizar vídeo de referência</div>
+    <p class="notice">Selecione um vídeo salvo no seu celular para assistir aqui. O arquivo não é enviado para a internet.</p>
+    <input class="fileInput" id="videoFile" type="file" accept="video/*">
+    <video class="videoPreview" id="signVideo" controls playsinline></video>
+    <p class="notice" id="videoStatus">Nenhum vídeo selecionado.</p>
+  </section>
   <section class="panel">
     <div class="label">Entrada por câmera — etapa inicial</div>
-    <div class="cameraBox" id="cameraBox"><div><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="video" autoplay playsinline></video></div>
+    <div class="cameraBox" id="cameraBox"><div id="cameraIntro"><div style="font-size:30px">📷</div><p>Use a câmera para preparar a próxima etapa de reconhecimento de sinais.</p><button class="primary" id="camera" type="button">Abrir câmera</button></div><video id="cameraVideo" autoplay playsinline style="display:none"></video></div>
     <p class="notice">A câmera nesta versão apenas mostra a imagem. Ela ainda não identifica nem traduz sinais. O reconhecimento será desenvolvido e testado com usuários fluentes em Libras.</p>
   </section>
-  <footer>SINAL LIBRAS • Protótipo gratuito em desenvolvimento</footer>
+  <footer>SINAL LIBRAS • Versão 0.2 • Protótipo gratuito em desenvolvimento</footer>
 </main>
 <script>
   let direction = "ptl";
@@ -85,11 +99,42 @@
     speechSynthesis.cancel(); const utterance=new SpeechSynthesisUtterance(value); utterance.lang="pt-BR"; speechSynthesis.speak(utterance);
   });
   document.querySelectorAll("[data-text]").forEach(button=>button.addEventListener("click",()=>{source.value=button.dataset.text;source.focus();}));
+  const signTopics=[
+    {word:"Olá",category:"Saudações",detail:"Tema de saudação — falta vídeo validado."},
+    {word:"Bom dia",category:"Saudações",detail:"Cumprimento — falta vídeo validado."},
+    {word:"Boa tarde",category:"Saudações",detail:"Cumprimento — falta vídeo validado."},
+    {word:"Boa noite",category:"Saudações",detail:"Cumprimento — falta vídeo validado."},
+    {word:"Obrigado",category:"Cortesia",detail:"Agradecimento — falta vídeo validado."},
+    {word:"Por favor",category:"Cortesia",detail:"Cortesia — falta vídeo validado."},
+    {word:"Desculpa",category:"Cortesia",detail:"Pedido de desculpas — falta vídeo validado."},
+    {word:"Água",category:"Cotidiano",detail:"Necessidade cotidiana — falta vídeo validado."},
+    {word:"Comer",category:"Cotidiano",detail:"Ação cotidiana — falta vídeo validado."},
+    {word:"Ajuda",category:"Cotidiano",detail:"Pedido de ajuda — falta vídeo validado."},
+    {word:"Casa",category:"Cotidiano",detail:"Lugar — falta vídeo validado."},
+    {word:"Família",category:"Cotidiano",detail:"Pessoas e relações — falta vídeo validado."}
+  ];
+  let activeFilter="todos";
+  function renderSigns(){
+    const q=document.getElementById("searchSigns").value.trim().toLocaleLowerCase("pt-BR");
+    const items=signTopics.filter(s=>(activeFilter==="todos"||s.category===activeFilter)&&(s.word+" "+s.category).toLocaleLowerCase("pt-BR").includes(q));
+    document.getElementById("signList").innerHTML=items.map(s=>'<article class="signCard"><strong>'+s.word+'</strong><small>'+s.detail+'</small><span class="tag">'+s.category+'</span></article>').join("");
+    document.getElementById("noSigns").hidden=items.length!==0;
+  }
+  document.getElementById("searchSigns").addEventListener("input",renderSigns);
+  document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{activeFilter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));renderSigns();}));
+  renderSigns();
+  let selectedVideoUrl=null;
+  document.getElementById("videoFile").addEventListener("change",e=>{
+    const file=e.target.files&&e.target.files[0];const player=document.getElementById("signVideo");if(!file)return;
+    if(selectedVideoUrl)URL.revokeObjectURL(selectedVideoUrl);
+    selectedVideoUrl=URL.createObjectURL(file);player.src=selectedVideoUrl;player.style.display="block";
+    document.getElementById("videoStatus").textContent="Vídeo local: "+file.name+". Ele permanece somente neste aparelho.";
+  });
   document.getElementById("camera").addEventListener("click",async()=>{
-    const video=document.getElementById("video"), box=document.getElementById("cameraBox");
-    if(!navigator.mediaDevices?.getUserMedia){box.querySelector("p").textContent="Seu navegador não permite acesso à câmera neste contexto. Abra o site por HTTPS.";return;}
-    try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});video.srcObject=stream;video.style.display="block";box.querySelector("div").style.display="none";}
-    catch(e){box.querySelector("p").textContent="Não foi possível abrir a câmera. Verifique a permissão do navegador e tente novamente.";}
+    const video=document.getElementById("cameraVideo"), intro=document.getElementById("cameraIntro");
+    if(!navigator.mediaDevices?.getUserMedia){intro.querySelector("p").textContent="Seu navegador não permite acesso à câmera neste contexto. Abra o site por HTTPS.";return;}
+    try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});video.srcObject=stream;video.style.display="block";intro.style.display="none";}
+    catch(e){intro.querySelector("p").textContent="Não foi possível abrir a câmera. Verifique a permissão do navegador e tente novamente.";}
   });
   if("serviceWorker" in navigator && location.protocol.startsWith("http")) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
