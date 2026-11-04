@@ -37,3 +37,23 @@ Pontos ausentes são preenchidos com zero e distinguíveis pelo quarto valor (m�
 - A divisão é feita pelo pseudônimo para impedir que gravações da mesma pessoa caiam em grupos diferentes. Com poucos sinalizadores, treino/validação/teste podem ficar desequilibrados.
 - Use apenas dados cujo uso em treinamento esteja autorizado pela licença e pelo consentimento aplicável.
 - Para reconhecer frases, será necessário um conjunto maior, contínuo e linguisticamente anotado, validado por pessoas surdas fluentes em Libras.
+
+## Primeiro classificador experimental (PyTorch)
+
+O arquivo `train_sequence.py` implementa uma rede GRU bidirecional pequena para classificar **sinais isolados** a partir da sequência de pontos. Não é um tradutor de Libras e não deve ser apresentado como tal.
+
+Instale Python e PyTorch em um ambiente de treinamento (por exemplo, Google Colab gratuito, se estiver disponível para sua conta). Em seguida, envie o JSONL preparado e execute:
+
+```bash
+pip install -r training/requirements.txt
+python training/train_sequence.py training/prepared_dataset.jsonl --output training/model
+```
+
+A saída inclui:
+- `sinal_libras_gru.pt`: pesos do protótipo;
+- `classes.json`: nomes das classes;
+- `metrics.json`: quantidade de exemplos e acurácia de validação/teste, quando houver dados.
+
+O script exige ao menos duas classes no grupo de treino e exemplos de validação. Se a divisão por sinalizador não gerar os grupos necessários, reúna dados de mais pessoas sinalizadoras. Não mova gravações da mesma pessoa entre treino e teste apenas para fazer o script funcionar.
+
+**Atenção:** poucos vídeos podem gerar acurácia enganosa e sobreajuste. O resultado é somente um experimento inicial, não um sistema pronto para uso. Avaliação séria requer mais sinalizadores, variantes regionais, contexto, expressões faciais e revisão linguística por pessoas surdas fluentes em Libras. Não use vídeos sem consentimento e licença que permita treinamento.
