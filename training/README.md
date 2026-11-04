@@ -123,3 +123,14 @@ A inferência preserva o estado da GRU entre blocos e emite texto provisório à
 
 
 Para o corpus UECE, respeite as partições oficiais train/dev/test. O artigo descreve identificadores de informante locais por item; ao validar vazamento, forme `signer_id` como identificador do item + identificador local do informante, e não trate rótulos locais iguais em itens diferentes como necessariamente a mesma pessoa física. A partição publicada garante separação de execuções por item, mas o artigo alerta que não garante participantes físicos inteiramente inéditos entre todas as partições.
+
+
+### Auditar o arquivo antes de treinar
+
+Execute primeiro o validador, para detectar dimensão incorreta, valores inválidos, IDs duplicados e participantes misturados entre partições:
+
+```bash
+python training/validate_continuous_jsonl.py training/continuous_dataset.jsonl --expected-dim 318
+```
+
+Use `--expected-dim 360` apenas se os vetores vierem do extrator do aplicativo. Para o corpus UECE, a documentação descreve 106 landmarks com coordenadas x/y/z, portanto 318 valores por quadro. O validador não confirma que o vídeo e a tradução estão corretamente alinhados; isso exige auditoria de metadados e revisão linguística.
