@@ -14,18 +14,20 @@ Protótipo gratuito, mobile-first e instalável como PWA para apoiar a comunica�
 - Copiar mensagens e compartilhar pelo menu nativo do Android, quando disponível; alternativa de cópia para navegadores sem compartilhamento direto.
 - Digitação por voz em português, quando o navegador oferece a API de reconhecimento de fala; exige permissão do microfone e pode depender de conexão.
 - Widget oficial VLibras para apoio à tradução de conteúdo textual português → Libras (requer internet).
+- Seleção de vídeo local de até 100 MB e extração de três quadros para inspeção visual, sem enviar o arquivo à internet.
 
 ## Limitações importantes
-Esta versão **não traduz automaticamente** português para Libras e **não reconhece sinais** pela câmera. O resultado informa isso explicitamente. Libras é uma língua natural, com gramática e elementos não manuais próprios; não deve ser reduzida a uma lista de gestos ou tradução palavra por palavra.
+Esta versão **não traduz automaticamente** português para Libras e **não reconhece sinais** pela câmera ou por vídeos. A extração de quadros serve apenas para inspeção visual e preparação de uma futura etapa de reconhecimento. O resultado informa isso explicitamente. Libras é uma língua natural, com gramática e elementos não manuais próprios; não deve ser reduzida a uma lista de gestos ou tradução palavra por palavra.
 
 ## Observação sobre o VLibras
 O widget é um serviço externo oficial e gratuito. Ele pode ajudar na compreensão de textos, mas a tradução automática pode conter erros e não substitui intérprete humano.
 
 ## Próximas etapas
-1. Criar biblioteca de sinais com vídeos revisados por pessoas fluentes em Libras.
-2. Construir fluxo de frases com estrutura linguística adequada.
-3. Pesquisar reconhecimento de mãos/corpo/expressões com dados autorizados e testes com a comunidade surda.
-4. Avaliar avatar 3D e conversação assistida.
+1. Desenvolver e validar reconhecimento de sinais em sequências de vídeo com dados autorizados e participação de pessoas fluentes em Libras.
+2. Criar biblioteca de sinais com vídeos revisados por pessoas fluentes em Libras.
+3. Construir fluxo de frases com estrutura linguística adequada.
+4. Pesquisar reconhecimento de mãos/corpo/expressões com dados autorizados e testes com a comunidade surda.
+5. Avaliar avatar 3D e conversação assistida.
 
 ## Publicar gratuitamente
 O projeto pode ser publicado pelo GitHub Pages. Não requer serviço pago para esta primeira versão.
