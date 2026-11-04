@@ -45,6 +45,9 @@ O widget é um serviço externo oficial e gratuito. Ele pode ajudar na compreens
 ## Preparação de dados para treinamento
 A exportação v2 inclui pseudônimo da pessoa sinalizadora e um campo `split` (`treino`, `validacao` ou `teste`) calculado de forma determinística por pseudônimo. O objetivo é manter gravações da mesma pessoa no mesmo grupo e evitar que o modelo seja avaliado com vídeos de alguém que já apareceu no treinamento. Com poucos participantes, a divisão pode ficar desequilibrada ou algum grupo pode ficar vazio; revise a distribuição antes de qualquer treinamento. Use apenas vídeos com autorização explícita e rótulos revisados por pessoas fluentes em Libras. Não use o conjunto V-Librasil para gerar derivados ou treinamento até confirmar a permissão compatível: a referência acadêmica indica licença CC BY-NC-ND 3.0 Brasil, que restringe obras derivadas.
 
+## Preparação de dados para treinamento
+O diretório `training/` contém um script Python sem dependências externas para validar e padronizar a exportação JSON em JSONL, com mãos, corpo, pontos faciais, rótulos e separação por pseudônimo de sinalizador. Consulte `training/README.md`. Esta ferramenta apenas prepara dados; ainda não existe um modelo treinado nem tradução automática de vídeo.
+
 ## Próximas etapas
 1. Desenvolver e validar reconhecimento de sinais em sequências de vídeo com dados autorizados e participação de pessoas fluentes em Libras.
 2. Criar biblioteca de sinais com vídeos revisados por pessoas fluentes em Libras.
