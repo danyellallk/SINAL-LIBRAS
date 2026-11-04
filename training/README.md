@@ -115,8 +115,11 @@ A inferência preserva o estado da GRU entre blocos e emite texto provisório à
 
 ### Limitações essenciais
 
-- O CTC aqui é uma linha de pesquisa experimental para alinhar uma sequência visual a tokens de português; não garante gramática natural, contexto, regionalismos ou interpretação correta.
+- O CTC aqui é uma linha de pesquisa experimental para alinhar uma sequência visual a tokens de português; não garante gramática natural, contexto, regionalismos ou interpretação correta. O script também descarta amostras cujo número de quadros seja insuficiente para alinhar os tokens pela regra CTC.
 - O dataset UECE tem vídeos contínuos e anotações ao nível da sequência, mas precisamos confirmar os nomes e a organização exata dos arquivos de landmarks e alinhar cada sequência ao texto correto antes de gerar o JSONL.
 - O dataset tem 55 sinais isolados e 123 sequências contínuas; é um corpus inicial pequeno para um tradutor geral. A documentação científica relata 5.335 gravações e uma divisão por participante/item que deve ser respeitada.
 - O dataset é CC BY-NC 4.0: uso não comercial, com atribuição. Não usar para lançar ou monetizar uma versão comercial sem autorização/licença adequada.
 - O modelo não foi treinado neste commit: nenhum corpus real foi baixado ou convertido automaticamente.
+
+
+Para o corpus UECE, respeite as partições oficiais train/dev/test. O artigo descreve identificadores de informante locais por item; ao validar vazamento, forme `signer_id` como identificador do item + identificador local do informante, e não trate rótulos locais iguais em itens diferentes como necessariamente a mesma pessoa física. A partição publicada garante separação de execuções por item, mas o artigo alerta que não garante participantes físicos inteiramente inéditos entre todas as partições.
