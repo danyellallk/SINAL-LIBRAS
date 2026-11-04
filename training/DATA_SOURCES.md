@@ -22,7 +22,7 @@ Uma autorização deve esclarecer, no mínimo, uso para pesquisa/treinamento de 
 - DOI: 10.5281/zenodo.21398895
 - Publicado em 16/07/2026.
 - Arquivos anunciados: `Landmarks.zip` (773,6 MB), vídeos RGB (9,0 GB) e outro conjunto de vídeos (35,6 GB), total aproximado de 45,4 GB.
-- Licença indicada nas informações consultadas: Creative Commons CC BY-NC 4.0. A cópia integral do `LICENSE.txt` da versão v4 ainda precisa ser lida e conferida antes de autorizar qualquer uso de treinamento.
+- Licença conferida diretamente no `LICENSE.txt` da versão v4: Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). Exige atribuição e proíbe uso comercial. Não usar em produto monetizado sem autorização/licença diferente dos titulares.
 - A licença exige atribuição e **não permite uso comercial**. Antes de qualquer uso, conferir o README, a estrutura, as anotações, as condições de consentimento e se a tarefa/labels servem ao nosso objetivo.
 
 Este dataset é uma opção para um experimento estritamente não comercial, respeitando a licença e citando os autores. Ele não deve ser usado em uma versão comercial ou monetizada sem uma autorização/licença diferente. A documentação científica descreve um pacote contínuo processado com partições de anotações `.npy` (train/dev/test), quadros e recursos. A auditoria realizada neste projeto confirmou que `Landmarks.zip` contém arrays `.npy` organizados em pastas por sinal/glossa e informante. Ainda não inspecionamos o conteúdo interno do pacote contínuo de 35,6 GB nem confirmamos como seus identificadores se relacionam com cada arquivo de landmarks. Isso o torna uma fonte promissora para pesquisar tradução contínua, mas ainda precisamos auditar o conteúdo e confirmar como as frases e glossas estão alinhadas. O arquivo de landmarks tem centenas de MB; não é adequado para baixar e treinar diretamente no celular Android.
@@ -87,3 +87,8 @@ python training/inspect_uece_continuous_package.py Libras-EQT-UECE-T.zip --sampl
 ```
 
 O pacote tem aproximadamente 35,6 GB. Não é necessário nem recomendável baixá-lo no celular. Quando a inspeção for executada em um ambiente com espaço suficiente, precisamos comparar os IDs e a estrutura das anotações com os caminhos de landmarks. Só depois dessa conferência será seguro criar o conversor para o formato CTC. Cabeçalhos NPY com dtype de objeto serão apenas identificados; nunca serão carregados com `allow_pickle=True`.
+
+
+### Conferência direta da licença e do README v4
+
+Em 04/11/2026, o arquivo `LICENSE.txt` da versão v4 foi aberto e conferido: ele declara CC BY-NC 4.0, exige atribuição e proíbe uso comercial. O README v4 também documenta a estrutura de `Libras-EQT-UECE-T.zip`: `annotations/dev.npy`, `annotations/test.npy`, `annotations/train.npy` e diretórios de quadros por gravação. O mesmo README descreve o ZIP de landmarks como CSV/JSON, mas a auditoria deste projeto encontrou NPY nesse pacote. Registrar e investigar essa diferença é obrigatório; não assumir que os dois pacotes têm o mesmo formato.
