@@ -33,6 +33,8 @@ jobs:
         run: python training/test_inspect_uece_continuous_package.py
       - name: Test static NPY pickle inspection
         run: python training/test_inspect_npy_pickle_static.py
+      - name: Test remote UECE ZIP header parser
+        run: python training/test_inspect_uece_remote_zip.py
       - name: Check Python syntax and notebook structure
         run: |
           python -m compileall -q training
