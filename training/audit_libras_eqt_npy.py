@@ -143,10 +143,24 @@ def main():
         output_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if args.compact:
-        coordinate_rows = report["per_coordinate_statistics"]
-        valid_means = [x["mean"] for x in coordinate_rows if x["mean"] is not None]
-        coordinate_mins = [x["min"] for x in coordinate_rows if x["min"] is not None]
-        coordinate_maxs = [x["max"] for x in coordinate_rows if x["max"] is not None]
+        # Estatísticas devem permanecer separadas por dimensão: 126 e 318
+        # representam esquemas diferentes e nunca podem ser agregados.
+        coordinate_summaries = {}
+        for dim, rows in report["coordinate_statistics_by_feature_dimension"].items():
+            valid = [row for row in rows if row["mean"] is not None]
+            mins = [row["min"] for row in valid]
+            maxs = [row["max"] for row in valid]
+            means = [row["mean"] for row in valid]
+            coordinate_summaries[dim] = {
+                "coordinate_count": len(rows),
+                "coordinates_with_data": len(valid),
+                "coordinates_constant": sum(1 for row in valid if row["min"] == row["max"]),
+                "coordinate_min_range": [min(mins, default=None), max(mins, default=None)],
+                "coordinate_max_range": [min(maxs, default=None), max(maxs, default=None)],
+                "coordinate_mean_range": [min(means, default=None), max(means, default=None)],
+                "first_6": rows[:6],
+                "last_6": rows[-6:],
+            }
         compact = {
             "archive_npy_files": report["archive_npy_files"],
             "labels_count": report["labels_count"],
@@ -166,14 +180,7 @@ def main():
             "zero_fraction": report["zero_fraction"],
             "global_min": report["global_min"],
             "global_max": report["global_max"],
-            "coordinate_count": len(coordinate_rows),
-            "coordinates_with_data": len(valid_means),
-            "coordinates_constant": sum(1 for x in coordinate_rows if x["min"] is not None and x["min"] == x["max"]),
-            "coordinate_min_range": [min(coordinate_mins, default=None), max(coordinate_mins, default=None)],
-            "coordinate_max_range": [min(coordinate_maxs, default=None), max(coordinate_maxs, default=None)],
-            "coordinate_mean_range": [min(valid_means, default=None), max(valid_means, default=None)],
-            "coordinate_first_12": coordinate_rows[:12],
-            "coordinate_last_12": coordinate_rows[-12:],
+            "coordinate_summaries_by_feature_dimension": coordinate_summaries,
             "errors_count": report["errors_count"],
             "errors_first_10": report["errors_first_30"][:10],
             "full_report_path": args.output_json,
