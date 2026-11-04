@@ -68,3 +68,7 @@ Na aba **Mais**, abra a câmera, permita o acesso e toque em **Iniciar gravaçã
 
 ## Base de pesquisa LIBRAS-EQT-UECE — atenção à licença
 Foi identificada a base LIBRAS-EQT-UECE (DOI: 10.5281/zenodo.21398895), que contém amostras isoladas e contínuas e arquivos de landmarks. A versão consultada informa licença CC BY-NC 4.0: exige atribuição e **proíbe uso comercial**. Portanto, ela não deve ser incorporada a um produto comercial sem autorização/licença separada dos titulares. Antes de qualquer experimento, é necessário conferir a licença de cada versão/arquivo, citar os autores e respeitar consentimentos e condições do conjunto. Não baixamos nem copiamos essa base para este repositório.
+
+
+### Selecionar vídeo da galeria (v2.4)
+Na área da câmera, o botão **Escolher vídeo da galeria** abre os vídeos disponíveis no Android. Ao selecionar um arquivo de até 100 MB, ele é carregado localmente e fica pronto para a etapa **Explorar → Preparar quadros do vídeo**. O seletor usa o mesmo fluxo local de análise; nenhum vídeo é enviado automaticamente.
