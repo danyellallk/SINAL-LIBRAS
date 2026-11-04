@@ -1,4 +1,4 @@
-const CACHE = "sinal-libras-v17";
+const CACHE = "sinal-libras-v18";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
