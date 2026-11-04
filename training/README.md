@@ -71,3 +71,52 @@ python training/inspect_libras_eqt.py Landmarks.zip --limit 25
 O inspetor lista extensões e tamanhos, mostra cabeçalhos CSV/JSON/NPY e pequenas amostras sem extrair o arquivo inteiro. Ele não treina nem converte o dataset. **Não passe os arquivos externos diretamente ao classificador atual:** primeiro precisamos confirmar o esquema de coordenadas, os rótulos/glossas, as frases alinhadas e as partições oficiais. Preserve as divisões oficiais por participante para evitar vazamento entre treino e teste.
 
 O classificador GRU deste repositório continua sendo apenas uma experiência de classificação de sequências rotuladas, não um tradutor contínuo de frases. O pacote contínuo da UECE pode permitir uma próxima etapa mais adequada, mas será necessário criar e validar um adaptador e um modelo de sequência para tradução.
+
+
+## Modelo experimental de sequência contínua (CTC)
+
+Foi adicionado `train_continuous_ctc.py`, um segundo experimento diferente do classificador de sinais isolados. Ele usa uma GRU **unidirecional causal** com CTC para aprender a emitir tokens de texto em ordem temporal. O estado recorrente pode ser mantido entre blocos durante a inferência.
+
+### Formato JSONL esperado
+
+Cada linha deve ser um objeto com:
+- `sample_id`: identificador da gravação;
+- `signer_id`: pseudônimo estável do participante;
+- `split`: `train`, `dev` ou `test`;
+- `portuguese_text`: frase-alvo em português;
+- `frames`: matriz temporal de vetores numéricos. Cada quadro deve ter sempre a mesma dimensão (por exemplo, 318 para 106 landmarks x 3 coordenadas, ou 360 para o vetor deste app).
+
+Exemplo ilustrativo (valores fictícios, não é dado real de Libras):
+
+```json
+{"sample_id":"exemplo-001","signer_id":"pessoa-a","split":"train","portuguese_text":"bom dia","frames":[[0.0,0.1,0.2],[0.1,0.2,0.3]]}
+```
+
+O exemplo acima é apenas esquemático e não pode ser treinado porque as dimensões são pequenas; cada quadro real deve ter 318 ou 360 valores conforme a fonte.
+
+### Treinar
+
+Depois de converter e validar os landmarks reais para o formato acima:
+
+```bash
+pip install -r training/requirements.txt
+python training/train_continuous_ctc.py training/continuous_dataset.jsonl --output training/continuous_model
+```
+
+### Inferência em blocos
+
+Com um checkpoint treinado e um JSON contendo `frames`:
+
+```bash
+python training/infer_continuous_stream.py training/continuous_model/sinal_libras_continuous_ctc.pt video_landmarks.json --chunk-frames 8
+```
+
+A inferência preserva o estado da GRU entre blocos e emite texto provisório à medida que os quadros chegam. A saída ainda pode mudar e o colapso CTC simples não faz revisão linguística. O script demonstra o fluxo técnico de processamento incremental, mas não está integrado à câmera do aplicativo.
+
+### Limitações essenciais
+
+- O CTC aqui é uma linha de pesquisa experimental para alinhar uma sequência visual a tokens de português; não garante gramática natural, contexto, regionalismos ou interpretação correta.
+- O dataset UECE tem vídeos contínuos e anotações ao nível da sequência, mas precisamos confirmar os nomes e a organização exata dos arquivos de landmarks e alinhar cada sequência ao texto correto antes de gerar o JSONL.
+- O dataset tem 55 sinais isolados e 123 sequências contínuas; é um corpus inicial pequeno para um tradutor geral. A documentação científica relata 5.335 gravações e uma divisão por participante/item que deve ser respeitada.
+- O dataset é CC BY-NC 4.0: uso não comercial, com atribuição. Não usar para lançar ou monetizar uma versão comercial sem autorização/licença adequada.
+- O modelo não foi treinado neste commit: nenhum corpus real foi baixado ou convertido automaticamente.
