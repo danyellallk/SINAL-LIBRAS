@@ -57,3 +57,17 @@ A saída inclui:
 O script exige ao menos duas classes no grupo de treino e exemplos de validação. Se a divisão por sinalizador não gerar os grupos necessários, reúna dados de mais pessoas sinalizadoras. Não mova gravações da mesma pessoa entre treino e teste apenas para fazer o script funcionar.
 
 **Atenção:** poucos vídeos podem gerar acurácia enganosa e sobreajuste. O resultado é somente um experimento inicial, não um sistema pronto para uso. Avaliação séria requer mais sinalizadores, variantes regionais, contexto, expressões faciais e revisão linguística por pessoas surdas fluentes em Libras. Não use vídeos sem consentimento e licença que permita treinamento.
+
+## Investigar o dataset LIBRAS-EQT-UECE
+
+A documentação do dataset informa que ele contém vídeos isolados e contínuos organizados por glossas, partições de anotações `.npy`, quadros processados e um pacote separado de landmarks em CSV/JSON. Consulte [DATA_SOURCES.md](DATA_SOURCES.md) para licença e limitações.
+
+Depois de obter legalmente o pacote `Landmarks.zip` em um ambiente de treinamento, rode:
+
+```bash
+python training/inspect_libras_eqt.py Landmarks.zip --limit 25
+```
+
+O inspetor lista extensões e tamanhos, mostra cabeçalhos CSV/JSON/NPY e pequenas amostras sem extrair o arquivo inteiro. Ele não treina nem converte o dataset. **Não passe os arquivos externos diretamente ao classificador atual:** primeiro precisamos confirmar o esquema de coordenadas, os rótulos/glossas, as frases alinhadas e as partições oficiais. Preserve as divisões oficiais por participante para evitar vazamento entre treino e teste.
+
+O classificador GRU deste repositório continua sendo apenas uma experiência de classificação de sequências rotuladas, não um tradutor contínuo de frases. O pacote contínuo da UECE pode permitir uma próxima etapa mais adequada, mas será necessário criar e validar um adaptador e um modelo de sequência para tradução.
